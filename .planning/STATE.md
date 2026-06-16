@@ -51,6 +51,12 @@ See: .planning/PROJECT.md (updated 2026-06-11)
 - Kill-chain methodology must be agreed at the start of Phase 2 before scenario authoring begins
 - CVE scenarios: no Metasploit at any stage; students author all exploit/weaponization code
 
+## Quick Tasks Completed
+
+| ID | Slug | Date | Summary |
+|---|---|---|---|
+| 260611-lxt | overlap-check-verify-proposed-scenarios- | 2026-06-11 | Verified all 23 proposed scenarios have zero overlap with 87 deployed OFFen EDU challenges. Report: `.planning/quick/260611-lxt-overlap-check-verify-proposed-scenarios-/OVERLAP-REPORT.md` |
+
 ## Performance Metrics
 
 | Metric | Value |
