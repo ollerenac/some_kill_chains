@@ -55,7 +55,13 @@ Plans:
 2. All 3 Cloud/Container scenarios have kill-chains that trace the full privilege escalation path from initial access to flag retrieval, with cloud-specific TTP codes (e.g., T1552.005 for IMDS credential theft)
 3. No CVE scenario kill-chain references Metasploit or automated exploit framework steps at any stage
 4. All 7 kill-chains conform to the stage format and TTP citation style defined in Phase 2
-**Plans:** TBD
+**Plans:** 4 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — D-05 CVE-03 identity correction (Struts S2-045) + KILL-CHAINS.md section anchors
+- [ ] 03-02-PLAN.md — CVE-01 EternalBlue + CVE-02 Log4Shell kill-chains
+- [ ] 03-03-PLAN.md — CVE-03 Struts S2-045 + CVE-04 PrintNightmare kill-chains
+- [ ] 03-04-PLAN.md — CC-01 IMDS SSRF + CC-02 Docker cgroup escape + CC-03 K8s hostPath + consistency table
 
 ### Phase 4: LLM + ATP Chain Kill-Chains + Final Review
 **Goal:** Fully detailed kill-chain write-ups for all 7 LLM and ATP chain scenarios (LLM-01..03, ATP-01..04), followed by a cross-catalog consistency review that ensures uniform format, difficulty calibration, and TTP coverage across all 23 scenarios.
@@ -77,5 +83,5 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Scenario Proposals Document | 1/1 | Complete   | 2026-06-11 |
 | 2. Kill-Chain Methodology + AD/Network | 1/1 | Complete   | 2026-06-12 |
-| 3. CVE + Cloud/Container Kill-Chains | 0/1 | Not started | - |
+| 3. CVE + Cloud/Container Kill-Chains | 0/4 | Planned (ready to execute) | - |
 | 4. LLM + ATP Chain Kill-Chains + Final Review | 0/1 | Not started | - |
