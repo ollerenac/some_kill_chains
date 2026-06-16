@@ -118,7 +118,7 @@ Plans:
 
 **Wave 5** *(blocked on Wave 4 completion)*
 
-- [ ] 04-05-PLAN.md — Cross-catalog consistency review (all 23 scenarios, 4 dimensions per D-17) + REVIEW.md + inline fixes
+- [x] 04-05-PLAN.md — Cross-catalog consistency review (all 23 scenarios, 4 dimensions per D-17) + REVIEW.md + inline fixes
 
 ---
 
