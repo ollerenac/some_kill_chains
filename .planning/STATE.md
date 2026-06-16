@@ -64,6 +64,7 @@ See: .planning/PROJECT.md (updated 2026-06-11)
 | 260613-5wu | create-public-scenarios-without-flag-hints | 2026-06-13 | `SCENARIOS.md` and `SCENARIOS_ES.md` sanitized — 24 flag-revealing phrases removed/replaced in each. `SCENARIOS_INTERNAL.md` and `SCENARIOS_ES_INTERNAL.md` created as instructor copies (gitignored). |
 | 260615-m33 | mapear-ctf-a-cursos-curricula | 2026-06-15 | `docs/CTF-CURSOS.md` created — 23 CTFs mapped to 16 curriculum courses. Tabla 1: CTF → curso primario/secundario + razón. Tabla 2: curso → CTFs sugeridos. Tabla de prioridades de contacto. |
 | 260616-f8l | redactar-correo-invitacion-profesores | 2026-06-16 | `docs/CORREO-INVITACION-PROFESORES.md` created — email template por encargo del Director de Escuela invitando a profesores a revisar el catálogo CTF y enviar apreciaciones, observaciones, correcciones y sugerencias. |
+| 260616-q7p | identificar-profesores-por-curso | 2026-06-16 | `docs/PROFESORES-CONTACTO.md` created — cruce de horario 2026-1 con 23 cursos de interés; 19 profesores únicos identificados con tabla de prioridad de contacto. CBH03 y CBN21 no están en horario 2026-1. |
 
 ## Performance Metrics
 
