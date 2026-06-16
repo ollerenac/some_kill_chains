@@ -98,7 +98,27 @@ Plans:
 3. The complete catalog (all 23 scenarios) passes a consistency check: uniform stage formatting, no missing TTP codes, difficulty ratings that match kill-chain complexity, and no duplicate TTP coverage across scenarios in the same domain
 4. The final document is ready for handoff to lab instructors without further editorial work
 
-**Plans:** TBD
+**Plans:** 5 plans
+
+**Wave 1**
+
+- [ ] 04-01-PLAN.md — LLM Security section header + LLM-01 (multi-layer prompt injection) + LLM-02 (RAG indirect injection) kill-chains
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 04-02-PLAN.md — LLM-03 (IDOR in chat history API) kill-chain
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 04-03-PLAN.md — ATP section header + ATP-01 (HAFNIUM-style SSRF pivot) + ATP-02 (SolarWinds-style supply chain + DNS C2) kill-chains
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
+- [ ] 04-04-PLAN.md — ATP-03 (LAPSUS$-style cloud identity chain) + ATP-04 (Volt Typhoon-style IPv6 relay chain) kill-chains + Consistency Verification table extension (7 new rows)
+
+**Wave 5** *(blocked on Wave 4 completion)*
+
+- [ ] 04-05-PLAN.md — Cross-catalog consistency review (all 23 scenarios, 4 dimensions per D-17) + REVIEW.md + inline fixes
 
 ---
 
@@ -109,4 +129,4 @@ Plans:
 | 1. Scenario Proposals Document | 1/1 | Complete   | 2026-06-11 |
 | 2. Kill-Chain Methodology + AD/Network | 1/1 | Complete   | 2026-06-12 |
 | 3. CVE + Cloud/Container Kill-Chains | 4/4 | Complete   | 2026-06-12 |
-| 4. LLM + ATP Chain Kill-Chains + Final Review | 0/1 | Not started | - |
+| 4. LLM + ATP Chain Kill-Chains + Final Review | 0/5 | Ready to execute | - |
