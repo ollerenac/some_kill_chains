@@ -63,6 +63,7 @@ See: .planning/PROJECT.md (updated 2026-06-11)
 | 260613-4cx | curar-referencias-clave-23-escenarios-ct | 2026-06-13 | `docs/REFERENCES.md` created (294 lines, 23 scenarios, all URLs verified). `### Referencias` blocks appended to all 23 scenarios in `SCENARIOS.md`. `## Referencias` appendix (236 lines) appended to `docs/KILL-CHAINS.md`. |
 | 260613-5wu | create-public-scenarios-without-flag-hints | 2026-06-13 | `SCENARIOS.md` and `SCENARIOS_ES.md` sanitized — 24 flag-revealing phrases removed/replaced in each. `SCENARIOS_INTERNAL.md` and `SCENARIOS_ES_INTERNAL.md` created as instructor copies (gitignored). |
 | 260615-m33 | mapear-ctf-a-cursos-curricula | 2026-06-15 | `docs/CTF-CURSOS.md` created — 23 CTFs mapped to 16 curriculum courses. Tabla 1: CTF → curso primario/secundario + razón. Tabla 2: curso → CTFs sugeridos. Tabla de prioridades de contacto. |
+| 260616-f8l | redactar-correo-invitacion-profesores | 2026-06-16 | `docs/CORREO-INVITACION-PROFESORES.md` created — email template por encargo del Director de Escuela invitando a profesores a revisar el catálogo CTF y enviar apreciaciones, observaciones, correcciones y sugerencias. |
 
 ## Performance Metrics
 
