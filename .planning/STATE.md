@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: ready_to_plan
-last_updated: "2026-06-12T09:22:41.527Z"
+last_updated: "2026-06-12T09:24:43.519Z"
 progress:
   total_phases: 4
   completed_phases: 2
@@ -23,7 +23,7 @@ Phase 2: Kill-Chain Methodology + AD/Network Scenarios — Planned (Ready to exe
 See: .planning/PROJECT.md (updated 2026-06-11)
 
 **Core value:** Students must deeply understand each attack technique by building and executing it themselves.
-**Current focus:** Phase 3 — cve + cloud/container kill chains
+**Current focus:** Phase 03 — cve-cloud-container-kill-chains
 
 ## Phase History
 
