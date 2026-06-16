@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "timestamp": "2026-06-11T20:54:39Z",
+  "timestamp": "2026-06-12T06:03:26Z",
   "phase": "01",
   "phase_name": "Scenario Proposals Document",
   "phase_dir": ".planning/phases/01-scenario-proposals-document",
@@ -13,13 +13,17 @@
     {"id": 2, "name": "Code review fixes applied", "status": "done", "commit": "81db4a2"},
     {"id": 3, "name": "Verification report written", "status": "done", "commit": "bc434db"},
     {"id": 4, "name": "OFFen EDU scraper + overlap check", "status": "done", "commit": "2e549c5"},
-    {"id": 5, "name": "Security fix: credentials to env vars", "status": "done", "commit": "5517ae3"}
+    {"id": 5, "name": "Security fix: credentials to env vars", "status": "done", "commit": "5517ae3"},
+    {"id": 6, "name": "Spanish PDF from existing catalog (pdf_to_es.py + offen_wargame_catalog_es.pdf)", "status": "done", "commit": "8fcbc87"},
+    {"id": 7, "name": "scrape_offen_es.py — Spanish PDF via API (VM offline, script ready)", "status": "done", "commit": "912e08d"}
   ],
-  "remaining_tasks": [],
+  "remaining_tasks": [
+    {"id": 8, "name": "SCENARIOS_ES.md — Spanish translation of SCENARIOS.md", "status": "not_started", "quick_id": "260612-1f9", "plan": ".planning/quick/260612-1f9-traducir-scenarios-md-al-espanol-como-sc/260612-1f9-PLAN.md"}
+  ],
   "blockers": [],
   "human_actions_pending": [
     {
-      "action": "Read SCENARIOS.md end-to-end and approve/revise/reject each of the 23 scenarios",
+      "action": "Read SCENARIOS.md (or SCENARIOS_ES.md once translated) end-to-end and approve/revise/reject each of the 23 scenarios",
       "context": "Phase 2 (kill-chain authoring) cannot begin until human approval is given. Overlap check confirms zero conflict with deployed library.",
       "blocking": true
     }
@@ -28,9 +32,11 @@
     {"decision": "CVE-04 uses LPE path only — both CVE-2021-1675 and CVE-2021-34527 in title", "rationale": "RESEARCH.md Pitfall 1 Option C; 2-VM design requires pre-existing foothold", "phase": "01"},
     {"decision": "CC-02 uses 'cgroup notification path' — no 'release_agent' string", "rationale": "RESEARCH.md Pitfall 4; implementation detail deferred to Phase 3", "phase": "01"},
     {"decision": "ATP-04 is NOT true LotL — mitm6/ntlmrelayx/evil-winrm are external tools", "rationale": "Code review finding CR-01; true LotL = OS-native binaries only", "phase": "01"},
-    {"decision": "All 23 proposed scenarios clear of 87 deployed OFFen EDU challenges", "rationale": "Overlap check 260611-lxt: zero true overlap on domain/CVE/TTP/keyword dimensions", "phase": "01"}
+    {"decision": "All 23 proposed scenarios clear of 87 deployed OFFen EDU challenges", "rationale": "Overlap check 260611-lxt: zero true overlap on domain/CVE/TTP/keyword dimensions", "phase": "01"},
+    {"decision": "Spanish PDF (offen_wargame_catalog_es.pdf) generated from existing English PDF via pdftotext parsing", "rationale": "OFFen VM offline; pdf_to_es.py uses positional column slicing + category regex anchor; 87/87 rows parsed correctly", "phase": "quick"},
+    {"decision": "scrape_offen_es.py also created for ES API content when VM is back online", "rationale": "Parallel approach: API-scraped version gets ES challenge text if platform has it", "phase": "quick"}
   ],
-  "uncommitted_files": ["CLAUDE.md"],
-  "next_action": "Human reads SCENARIOS.md, approves scenarios, then runs /gsd:execute-phase 2",
-  "context_notes": "Phase 1 is documentation-only (markdown proposals catalog). Phase 2 begins kill-chain authoring — more technical, per-scenario detail. AD and Network domains first (9 scenarios), then CVE+Cloud/Container (Phase 3), LLM+APT (Phase 4)."
+  "uncommitted_files": ["CLAUDE.md", "BRIEF.md", "docs/"],
+  "next_action": "Run /gsd-quick resume traducir-scenarios-md-al-espanol-como-sc to complete SCENARIOS_ES.md, then human approves scenarios, then /gsd:execute-phase 2",
+  "context_notes": "Phase 1 docs complete. This session added: offen_wargame_catalog_es.pdf (Spanish-labeled PDF, no VM needed), scripts/pdf_to_es.py (parser), scripts/scrape_offen_es.py (API-based ES scraper for when VM is online). SCENARIOS_ES.md translation queued as quick task 260612-1f9 — plan committed at 11d1994, execution deferred due to context exhaustion (72%). Resume immediately runs the translation."
 }
