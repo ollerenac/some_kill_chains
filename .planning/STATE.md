@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: complete
-last_updated: "2026-06-13T09:08:25.711Z"
+last_updated: "2026-06-14T19:15:01.080Z"
 progress:
   total_phases: 4
   completed_phases: 4
@@ -62,6 +62,7 @@ See: .planning/PROJECT.md (updated 2026-06-11)
 | 260612-1f9 | traducir-scenarios-md-al-espanol-como-sc | 2026-06-12 | `SCENARIOS_ES.md` written — complete Spanish translation of all 23 scenarios across 6 domains. Technical terms, CVE IDs, tool names, and protocol names preserved in English. |
 | 260613-4cx | curar-referencias-clave-23-escenarios-ct | 2026-06-13 | `docs/REFERENCES.md` created (294 lines, 23 scenarios, all URLs verified). `### Referencias` blocks appended to all 23 scenarios in `SCENARIOS.md`. `## Referencias` appendix (236 lines) appended to `docs/KILL-CHAINS.md`. |
 | 260613-5wu | create-public-scenarios-without-flag-hints | 2026-06-13 | `SCENARIOS.md` and `SCENARIOS_ES.md` sanitized — 24 flag-revealing phrases removed/replaced in each. `SCENARIOS_INTERNAL.md` and `SCENARIOS_ES_INTERNAL.md` created as instructor copies (gitignored). |
+| 260615-m33 | mapear-ctf-a-cursos-curricula | 2026-06-15 | `docs/CTF-CURSOS.md` created — 23 CTFs mapped to 16 curriculum courses. Tabla 1: CTF → curso primario/secundario + razón. Tabla 2: curso → CTFs sugeridos. Tabla de prioridades de contacto. |
 
 ## Performance Metrics
 
