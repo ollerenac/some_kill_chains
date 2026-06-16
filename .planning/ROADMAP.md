@@ -102,7 +102,7 @@ Plans:
 
 **Wave 1**
 
-- [ ] 04-01-PLAN.md — LLM Security section header + LLM-01 (multi-layer prompt injection) + LLM-02 (RAG indirect injection) kill-chains
+- [x] 04-01-PLAN.md — LLM Security section header + LLM-01 (multi-layer prompt injection) + LLM-02 (RAG indirect injection) kill-chains
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
