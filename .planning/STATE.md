@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planned
-last_updated: "2026-06-11T16:29:04.685Z"
+last_updated: "2026-06-12T06:10:00Z"
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 1
-  completed_plans: 0
-  percent: 0
+  completed_plans: 1
+  percent: 25
 ---
 
 # Project State
@@ -57,6 +57,7 @@ See: .planning/PROJECT.md (updated 2026-06-11)
 |---|---|---|---|
 | 260611-lxt | overlap-check-verify-proposed-scenarios- | 2026-06-11 | Verified all 23 proposed scenarios have zero overlap with 87 deployed OFFen EDU challenges. Report: `.planning/quick/260611-lxt-overlap-check-verify-proposed-scenarios-/OVERLAP-REPORT.md` |
 | 260612-0y4 | generar-pdf-en-espanol-del-catalogo-offe | 2026-06-12 | Script `scripts/scrape_offen_es.py` created — Spanish PDF generator with ES API probe + EN fallback. PDF generation pending (OFFen VM offline). Run: `OFFEN_LOGIN_ID=user1 OFFEN_PASSWORD=<pw> python3 scripts/scrape_offen_es.py` |
+| 260612-1f9 | traducir-scenarios-md-al-espanol-como-sc | 2026-06-12 | `SCENARIOS_ES.md` written — complete Spanish translation of all 23 scenarios across 6 domains. Technical terms, CVE IDs, tool names, and protocol names preserved in English. |
 
 ## Performance Metrics
 

@@ -1,13 +1,13 @@
 {
   "version": "1.0",
-  "timestamp": "2026-06-12T06:03:26Z",
+  "timestamp": "2026-06-12T06:11:00Z",
   "phase": "01",
   "phase_name": "Scenario Proposals Document",
   "phase_dir": ".planning/phases/01-scenario-proposals-document",
   "plan": 1,
   "task": 1,
   "total_tasks": 1,
-  "status": "paused",
+  "status": "complete_awaiting_human_approval",
   "completed_tasks": [
     {"id": 1, "name": "Author all 23 scenario proposals (SCENARIOS.md)", "status": "done", "commit": "3030b44"},
     {"id": 2, "name": "Code review fixes applied", "status": "done", "commit": "81db4a2"},
@@ -15,16 +15,15 @@
     {"id": 4, "name": "OFFen EDU scraper + overlap check", "status": "done", "commit": "2e549c5"},
     {"id": 5, "name": "Security fix: credentials to env vars", "status": "done", "commit": "5517ae3"},
     {"id": 6, "name": "Spanish PDF from existing catalog (pdf_to_es.py + offen_wargame_catalog_es.pdf)", "status": "done", "commit": "8fcbc87"},
-    {"id": 7, "name": "scrape_offen_es.py — Spanish PDF via API (VM offline, script ready)", "status": "done", "commit": "912e08d"}
+    {"id": 7, "name": "scrape_offen_es.py — Spanish PDF via API (VM offline, script ready)", "status": "done", "commit": "912e08d"},
+    {"id": 8, "name": "SCENARIOS_ES.md — Spanish translation of SCENARIOS.md", "status": "done", "quick_id": "260612-1f9"}
   ],
-  "remaining_tasks": [
-    {"id": 8, "name": "SCENARIOS_ES.md — Spanish translation of SCENARIOS.md", "status": "not_started", "quick_id": "260612-1f9", "plan": ".planning/quick/260612-1f9-traducir-scenarios-md-al-espanol-como-sc/260612-1f9-PLAN.md"}
-  ],
+  "remaining_tasks": [],
   "blockers": [],
   "human_actions_pending": [
     {
-      "action": "Read SCENARIOS.md (or SCENARIOS_ES.md once translated) end-to-end and approve/revise/reject each of the 23 scenarios",
-      "context": "Phase 2 (kill-chain authoring) cannot begin until human approval is given. Overlap check confirms zero conflict with deployed library.",
+      "action": "Read SCENARIOS_ES.md (or SCENARIOS.md) end-to-end and approve/revise/reject each of the 23 scenarios",
+      "context": "Phase 2 (kill-chain authoring) cannot begin until human approval is given. SCENARIOS_ES.md is now complete. Overlap check confirms zero conflict with 87 deployed OFFen EDU challenges.",
       "blocking": true
     }
   ],
@@ -37,6 +36,6 @@
     {"decision": "scrape_offen_es.py also created for ES API content when VM is back online", "rationale": "Parallel approach: API-scraped version gets ES challenge text if platform has it", "phase": "quick"}
   ],
   "uncommitted_files": ["CLAUDE.md", "BRIEF.md", "docs/"],
-  "next_action": "Run /gsd-quick resume traducir-scenarios-md-al-espanol-como-sc to complete SCENARIOS_ES.md, then human approves scenarios, then /gsd:execute-phase 2",
-  "context_notes": "Phase 1 docs complete. This session added: offen_wargame_catalog_es.pdf (Spanish-labeled PDF, no VM needed), scripts/pdf_to_es.py (parser), scripts/scrape_offen_es.py (API-based ES scraper for when VM is online). SCENARIOS_ES.md translation queued as quick task 260612-1f9 — plan committed at 11d1994, execution deferred due to context exhaustion (72%). Resume immediately runs the translation."
+  "next_action": "Human reads SCENARIOS_ES.md and approves/revises/rejects each of the 23 scenarios. Once approved: /gsd:execute-phase 2",
+  "context_notes": "All Phase 1 technical tasks complete. SCENARIOS_ES.md (Spanish translation, 23 scenarios) written and committed. Phase 1 artifacts: SCENARIOS.md, SCENARIOS_ES.md, offen_wargame_catalog_es.pdf, scripts/pdf_to_es.py, scripts/scrape_offen_es.py, OVERLAP-REPORT.md, 01-VERIFICATION.md. The only gate remaining is human approval of the 23 scenarios before Phase 2 (kill-chain authoring, AD+Network first) begins."
 }
