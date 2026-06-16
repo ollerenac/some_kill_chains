@@ -1,41 +1,54 @@
 {
   "version": "1.0",
-  "timestamp": "2026-06-12T06:11:00Z",
-  "phase": "01",
-  "phase_name": "Scenario Proposals Document",
-  "phase_dir": ".planning/phases/01-scenario-proposals-document",
-  "plan": 1,
-  "task": 1,
-  "total_tasks": 1,
-  "status": "complete_awaiting_human_approval",
+  "timestamp": "2026-06-12T22:25:14.721Z",
+  "phase": null,
+  "phase_name": "post-completion",
+  "phase_dir": null,
+  "plan": null,
+  "task": null,
+  "total_tasks": null,
+  "status": "paused",
   "completed_tasks": [
-    {"id": 1, "name": "Author all 23 scenario proposals (SCENARIOS.md)", "status": "done", "commit": "3030b44"},
-    {"id": 2, "name": "Code review fixes applied", "status": "done", "commit": "81db4a2"},
-    {"id": 3, "name": "Verification report written", "status": "done", "commit": "bc434db"},
-    {"id": 4, "name": "OFFen EDU scraper + overlap check", "status": "done", "commit": "2e549c5"},
-    {"id": 5, "name": "Security fix: credentials to env vars", "status": "done", "commit": "5517ae3"},
-    {"id": 6, "name": "Spanish PDF from existing catalog (pdf_to_es.py + offen_wargame_catalog_es.pdf)", "status": "done", "commit": "8fcbc87"},
-    {"id": 7, "name": "scrape_offen_es.py — Spanish PDF via API (VM offline, script ready)", "status": "done", "commit": "912e08d"},
-    {"id": 8, "name": "SCENARIOS_ES.md — Spanish translation of SCENARIOS.md", "status": "done", "quick_id": "260612-1f9"}
+    {"id": 1, "name": "Phase 1 — Scenario Proposals (SCENARIOS.md, 23 scenarios)", "status": "done", "commit": "3030b44"},
+    {"id": 2, "name": "Phase 2 — AD + NET Kill-Chains", "status": "done", "commit": "98d0b4e"},
+    {"id": 3, "name": "Phase 3 — CVE + CC Kill-Chains", "status": "done", "commit": "98d0b4e"},
+    {"id": 4, "name": "Phase 4 — LLM + ATP Kill-Chains + Final Review", "status": "done", "commit": "98d0b4e"},
+    {"id": 5, "name": "Quick: SCENARIOS_ES.md — Spanish translation of proposals", "status": "done", "commit": "539fe99"},
+    {"id": 6, "name": "Quick: GitHub Actions publish workflow for GitHub Pages", "status": "done", "commit": "539fe99"},
+    {"id": 7, "name": "Quick: KILL-CHAINS_ES.md — full Spanish translation of kill-chain catalog", "status": "done", "commit": "1e5fe4c"},
+    {"id": 8, "name": "README.md with GitHub Pages link", "status": "done", "commit": "a138294"}
   ],
   "remaining_tasks": [],
   "blockers": [],
   "human_actions_pending": [
     {
-      "action": "Read SCENARIOS_ES.md (or SCENARIOS.md) end-to-end and approve/revise/reject each of the 23 scenarios",
-      "context": "Phase 2 (kill-chain authoring) cannot begin until human approval is given. SCENARIOS_ES.md is now complete. Overlap check confirms zero conflict with 87 deployed OFFen EDU challenges.",
-      "blocking": true
+      "action": "Verify GitHub Pages deployment completed at https://ollerenac.github.io/some_kill_chains/",
+      "context": "Pushed to origin/main at a138294. Actions workflow triggers on KILL-CHAINS_ES.md change and deploys all four docs (SCENARIOS.md, SCENARIOS_ES.md, KILL-CHAINS.md, KILL-CHAINS_ES.md) plus index page.",
+      "blocking": false
+    },
+    {
+      "action": "Decide whether to commit remaining untracked planning artifacts",
+      "context": "Untracked: .planning/README.md, .planning/phases/04-*/04-VERIFICATION.md, BRIEF.md, docs/contenidos_adicionales_inictel/, docs/curricula/, docs/images/. Modified but unstaged: .planning/STATE.md, .planning/config.json, CLAUDE.md.",
+      "blocking": false
     }
   ],
   "decisions": [
-    {"decision": "CVE-04 uses LPE path only — both CVE-2021-1675 and CVE-2021-34527 in title", "rationale": "RESEARCH.md Pitfall 1 Option C; 2-VM design requires pre-existing foothold", "phase": "01"},
-    {"decision": "CC-02 uses 'cgroup notification path' — no 'release_agent' string", "rationale": "RESEARCH.md Pitfall 4; implementation detail deferred to Phase 3", "phase": "01"},
-    {"decision": "ATP-04 is NOT true LotL — mitm6/ntlmrelayx/evil-winrm are external tools", "rationale": "Code review finding CR-01; true LotL = OS-native binaries only", "phase": "01"},
-    {"decision": "All 23 proposed scenarios clear of 87 deployed OFFen EDU challenges", "rationale": "Overlap check 260611-lxt: zero true overlap on domain/CVE/TTP/keyword dimensions", "phase": "01"},
-    {"decision": "Spanish PDF (offen_wargame_catalog_es.pdf) generated from existing English PDF via pdftotext parsing", "rationale": "OFFen VM offline; pdf_to_es.py uses positional column slicing + category regex anchor; 87/87 rows parsed correctly", "phase": "quick"},
-    {"decision": "scrape_offen_es.py also created for ES API content when VM is back online", "rationale": "Parallel approach: API-scraped version gets ES challenge text if platform has it", "phase": "quick"}
+    {"decision": "Translate KILL-CHAINS.md in-context — no parallel agents", "rationale": "User explicitly rejected multi-agent workflow due to excessive permission prompts", "phase": "quick"},
+    {"decision": "Section-by-section temp files (/tmp/kc-es-0N-*.md), then cat-concatenate to main file", "rationale": "Avoids single giant Write call; each section independently verifiable", "phase": "quick"},
+    {"decision": "Keep PASS verbatim in Consistency Verification table", "rationale": "PASS is a technical standard term, not prose", "phase": "quick"},
+    {"decision": "GitHub Pages uses peaceiris/actions-gh-pages@v4 deploying to gh-pages branch with Jekyll enabled", "rationale": "Standard approach; index.md renders as landing page linking all four docs", "phase": "quick"}
   ],
-  "uncommitted_files": ["CLAUDE.md", "BRIEF.md", "docs/"],
-  "next_action": "Human reads SCENARIOS_ES.md and approves/revises/rejects each of the 23 scenarios. Once approved: /gsd:execute-phase 2",
-  "context_notes": "All Phase 1 technical tasks complete. SCENARIOS_ES.md (Spanish translation, 23 scenarios) written and committed. Phase 1 artifacts: SCENARIOS.md, SCENARIOS_ES.md, offen_wargame_catalog_es.pdf, scripts/pdf_to_es.py, scripts/scrape_offen_es.py, OVERLAP-REPORT.md, 01-VERIFICATION.md. The only gate remaining is human approval of the 23 scenarios before Phase 2 (kill-chain authoring, AD+Network first) begins."
+  "uncommitted_files": [
+    ".planning/STATE.md (modified)",
+    ".planning/config.json (modified)",
+    "CLAUDE.md (modified)",
+    ".planning/README.md (untracked)",
+    ".planning/phases/04-llm-atp-chain-kill-chains-final-review/04-VERIFICATION.md (untracked)",
+    "BRIEF.md (untracked)",
+    "docs/contenidos_adicionales_inictel/ (untracked)",
+    "docs/curricula/ (untracked)",
+    "docs/images/ (untracked)"
+  ],
+  "next_action": "Check https://ollerenac.github.io/some_kill_chains/ to confirm GitHub Pages deployment. Project v1.0 is otherwise complete.",
+  "context_notes": "Project v1.0 is complete. All 4 phases done (23 scenarios, 28 flags, 4044-line kill-chain catalog). Both EN and ES versions of SCENARIOS and KILL-CHAINS committed and pushed. GitHub Actions workflow will deploy to Pages. No open work items remain."
 }
