@@ -1527,6 +1527,22 @@ sudo nc -lvnp 80 | grep "X-Flag"
 
 ---
 
+## CVE Weaponization Kill-Chains
+
+---
+
+<!-- CVE-01..04 kill-chains appended by Plans 02–03 -->
+
+---
+
+## Cloud/Container Security Kill-Chains
+
+---
+
+<!-- CC-01..03 kill-chains appended by Plan 04 -->
+
+---
+
 ## Consistency Verification
 
 The following checklist was applied before finalizing this document:
