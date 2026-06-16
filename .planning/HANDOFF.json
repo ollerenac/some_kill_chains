@@ -1,55 +1,36 @@
 {
   "version": "1.0",
-  "timestamp": "2026-06-11T17:04:11.874Z",
+  "timestamp": "2026-06-11T20:54:39Z",
   "phase": "01",
-  "phase_name": "scenario-proposals-document",
+  "phase_name": "Scenario Proposals Document",
   "phase_dir": ".planning/phases/01-scenario-proposals-document",
   "plan": 1,
   "task": 1,
   "total_tasks": 1,
   "status": "paused",
   "completed_tasks": [
-    {
-      "id": 1,
-      "name": "Author all 23 scenario entries and write SCENARIOS.md",
-      "status": "done",
-      "commit": "3030b44"
-    }
+    {"id": 1, "name": "Author all 23 scenario proposals (SCENARIOS.md)", "status": "done", "commit": "3030b44"},
+    {"id": 2, "name": "Code review fixes applied", "status": "done", "commit": "81db4a2"},
+    {"id": 3, "name": "Verification report written", "status": "done", "commit": "bc434db"},
+    {"id": 4, "name": "OFFen EDU scraper + overlap check", "status": "done", "commit": "2e549c5"},
+    {"id": 5, "name": "Security fix: credentials to env vars", "status": "done", "commit": "5517ae3"}
   ],
   "remaining_tasks": [],
   "blockers": [],
   "human_actions_pending": [
     {
-      "action": "Read SCENARIOS.md end-to-end as a lab instructor and make approve/revise/reject decisions per scenario entry",
-      "context": "D-10 / success-criterion-10: user must confirm the document is self-contained enough for approval decisions without reading any other document. This is the Phase 1 gate — Phase 2 cannot begin until this approval is given.",
+      "action": "Read SCENARIOS.md end-to-end and approve/revise/reject each of the 23 scenarios",
+      "context": "Phase 2 (kill-chain authoring) cannot begin until human approval is given. Overlap check confirms zero conflict with deployed library.",
       "blocking": true
     }
   ],
   "decisions": [
-    {
-      "decision": "CVE-04 framed as LPE path, title references both CVE-2021-1675 and CVE-2021-34527",
-      "rationale": "RESEARCH.md Pitfall 1 Option C — LPE path consistent with 2-VM standalone design; RCE path would require external attacker position",
-      "phase": "01"
-    },
-    {
-      "decision": "CC-02 narrative uses 'cgroup notification path' without naming release_agent",
-      "rationale": "RESEARCH.md Pitfall 4 — release_agent is Phase 3 kill-chain detail, not Phase 1 proposal content",
-      "phase": "01"
-    },
-    {
-      "decision": "ATP-04 framed as no-malware constraint (no compiled payloads/shellcode/implants), not living-off-the-land",
-      "rationale": "CR-01 code review finding — mitm6/ntlmrelayx/evil-winrm are not OS-native binaries; LotL claim was factually false",
-      "phase": "01"
-    },
-    {
-      "decision": "Section header corrected to 'Multi-Step APT Chains' (not ATP)",
-      "rationale": "WR-04 — APT is the correct industry term for Conti/HAFNIUM/Volt Typhoon; ATP prefix on IDs is locked by REQUIREMENTS.md and unchanged",
-      "phase": "01"
-    }
+    {"decision": "CVE-04 uses LPE path only — both CVE-2021-1675 and CVE-2021-34527 in title", "rationale": "RESEARCH.md Pitfall 1 Option C; 2-VM design requires pre-existing foothold", "phase": "01"},
+    {"decision": "CC-02 uses 'cgroup notification path' — no 'release_agent' string", "rationale": "RESEARCH.md Pitfall 4; implementation detail deferred to Phase 3", "phase": "01"},
+    {"decision": "ATP-04 is NOT true LotL — mitm6/ntlmrelayx/evil-winrm are external tools", "rationale": "Code review finding CR-01; true LotL = OS-native binaries only", "phase": "01"},
+    {"decision": "All 23 proposed scenarios clear of 87 deployed OFFen EDU challenges", "rationale": "Overlap check 260611-lxt: zero true overlap on domain/CVE/TTP/keyword dimensions", "phase": "01"}
   ],
-  "uncommitted_files": [
-    "CLAUDE.md (modified, unrelated to phase — do not commit with phase work)"
-  ],
-  "next_action": "User reviews SCENARIOS.md and approves Phase 1 gate. Once approved, run /gsd:execute-phase 2 to begin kill-chain authoring.",
-  "context_notes": "Phase 1 is fully complete. SCENARIOS.md has 23 entries across 6 domains, all acceptance criteria pass, code review fixes applied, verification report written. The only outstanding item is the human approval gate (D-10). CLAUDE.md has uncommitted changes unrelated to this phase — do not include in phase commits."
+  "uncommitted_files": ["CLAUDE.md"],
+  "next_action": "Human reads SCENARIOS.md, approves scenarios, then runs /gsd:execute-phase 2",
+  "context_notes": "Phase 1 is documentation-only (markdown proposals catalog). Phase 2 begins kill-chain authoring — more technical, per-scenario detail. AD and Network domains first (9 scenarios), then CVE+Cloud/Container (Phase 3), LLM+APT (Phase 4)."
 }
