@@ -110,7 +110,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 04-03-PLAN.md — ATP section header + ATP-01 (HAFNIUM-style SSRF pivot) + ATP-02 (SolarWinds-style supply chain + DNS C2) kill-chains
+- [x] 04-03-PLAN.md — ATP section header + ATP-01 (HAFNIUM-style SSRF pivot) + ATP-02 (SolarWinds-style supply chain + DNS C2) kill-chains
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
