@@ -2,3 +2,7 @@
 *.env
 __pycache__/
 *.pyc
+
+# Internal scenario versions with flag hints (not for public distribution)
+SCENARIOS_INTERNAL.md
+SCENARIOS_ES_INTERNAL.md
