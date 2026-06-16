@@ -1,54 +1,55 @@
 {
   "version": "1.0",
-  "timestamp": "2026-06-12T22:25:14.721Z",
+  "timestamp": "2026-06-16T19:57:27.057Z",
   "phase": null,
-  "phase_name": "post-completion",
+  "phase_name": "post-v1.0 ad-hoc",
   "phase_dir": null,
   "plan": null,
   "task": null,
   "total_tasks": null,
   "status": "paused",
   "completed_tasks": [
-    {"id": 1, "name": "Phase 1 — Scenario Proposals (SCENARIOS.md, 23 scenarios)", "status": "done", "commit": "3030b44"},
-    {"id": 2, "name": "Phase 2 — AD + NET Kill-Chains", "status": "done", "commit": "98d0b4e"},
-    {"id": 3, "name": "Phase 3 — CVE + CC Kill-Chains", "status": "done", "commit": "98d0b4e"},
-    {"id": 4, "name": "Phase 4 — LLM + ATP Kill-Chains + Final Review", "status": "done", "commit": "98d0b4e"},
-    {"id": 5, "name": "Quick: SCENARIOS_ES.md — Spanish translation of proposals", "status": "done", "commit": "539fe99"},
-    {"id": 6, "name": "Quick: GitHub Actions publish workflow for GitHub Pages", "status": "done", "commit": "539fe99"},
-    {"id": 7, "name": "Quick: KILL-CHAINS_ES.md — full Spanish translation of kill-chain catalog", "status": "done", "commit": "1e5fe4c"},
-    {"id": 8, "name": "README.md with GitHub Pages link", "status": "done", "commit": "a138294"}
+    {"id": 1, "name": "PDF generator (scripts/generate_pdf_es.py)", "status": "done", "commit": "ac57ec1", "note": "file still untracked — needs commit"},
+    {"id": 2, "name": "CTF-course mapping (docs/CTF-CURSOS.md)", "status": "done", "commit": "15a5b7e"},
+    {"id": 3, "name": "Git author rebase (blinkomaniak → ollerenac)", "status": "done", "commit": "force-pushed by user between sessions"},
+    {"id": 4, "name": "Untrack PDFs + recreate .gitignore (*.pdf rule)", "status": "done", "commit": "1d687f1"},
+    {"id": 5, "name": "Professor invitation email (docs/CORREO-INVITACION-PROFESORES.md)", "status": "done", "commit": "9da138e"},
+    {"id": 6, "name": "Professor identification (docs/PROFESORES-CONTACTO.md)", "status": "done", "commit": "8c10eb8"}
   ],
-  "remaining_tasks": [],
-  "blockers": [],
+  "remaining_tasks": [
+    {"id": 7, "name": "Commit scripts/generate_pdf_es.py (untracked PDF generator)", "status": "not_started"},
+    {"id": 8, "name": "Push commits 9da138e, 2e85276, 8c10eb8 to origin/main", "status": "not_started"},
+    {"id": 9, "name": "Decide fate of untracked local files (BRIEF.md, *.csv, *.xlsx, *.jpeg, docs/contenidos_adicionales_inictel/, docs/images/)", "status": "not_started"},
+    {"id": 10, "name": "Identify CBH03 + CBN21 professors (Auditoría, Forense — absent from 2026-1)", "status": "blocked"}
+  ],
+  "blockers": [
+    {"description": "CBH03 (Auditoría de Ciberseguridad) and CBN21 (Informática Forense) not in 2026-1 schedule — professors unknown", "type": "external", "workaround": "Check 2026-2 schedule or ask faculty coordinator directly"}
+  ],
   "human_actions_pending": [
-    {
-      "action": "Verify GitHub Pages deployment completed at https://ollerenac.github.io/some_kill_chains/",
-      "context": "Pushed to origin/main at a138294. Actions workflow triggers on KILL-CHAINS_ES.md change and deploys all four docs (SCENARIOS.md, SCENARIOS_ES.md, KILL-CHAINS.md, KILL-CHAINS_ES.md) plus index page.",
-      "blocking": false
-    },
-    {
-      "action": "Decide whether to commit remaining untracked planning artifacts",
-      "context": "Untracked: .planning/README.md, .planning/phases/04-*/04-VERIFICATION.md, BRIEF.md, docs/contenidos_adicionales_inictel/, docs/curricula/, docs/images/. Modified but unstaged: .planning/STATE.md, .planning/config.json, CLAUDE.md.",
-      "blocking": false
-    }
+    {"action": "git push origin main — push commits 9da138e, 2e85276, 8c10eb8 to remote", "context": "Force-push in previous session only covered up to 1d687f1; newer commits may not be on remote yet", "blocking": false},
+    {"action": "Complete placeholders in docs/CORREO-INVITACION-PROFESORES.md before sending (deadline date, director name, institution, contact info)", "context": "Email template ready at docs/CORREO-INVITACION-PROFESORES.md — [COMPLETAR] marks all remaining placeholders", "blocking": false}
   ],
   "decisions": [
-    {"decision": "Translate KILL-CHAINS.md in-context — no parallel agents", "rationale": "User explicitly rejected multi-agent workflow due to excessive permission prompts", "phase": "quick"},
-    {"decision": "Section-by-section temp files (/tmp/kc-es-0N-*.md), then cat-concatenate to main file", "rationale": "Avoids single giant Write call; each section independently verifiable", "phase": "quick"},
-    {"decision": "Keep PASS verbatim in Consistency Verification table", "rationale": "PASS is a technical standard term, not prose", "phase": "quick"},
-    {"decision": "GitHub Pages uses peaceiris/actions-gh-pages@v4 deploying to gh-pages branch with Jekyll enabled", "rationale": "Standard approach; index.md renders as landing page linking all four docs", "phase": "quick"}
+    {"decision": "PDF generation: reportlab (Option A)", "rationale": "Already installed, no new deps, supports UTF-8 via NotoSans TTF", "phase": "post-v1.0"},
+    {"decision": "PDF scope: Spanish only, public version (no flag hints)", "rationale": "User explicitly chose ES only; SCENARIOS_ES_INTERNAL.md is gitignored for instructor copy", "phase": "post-v1.0"},
+    {"decision": "CTF-course affinity: central technique, not general domain", "rationale": "More precise professor matching — e.g. CC-01 (SSRF in IMDS) maps to CBN05 (Pentesting Web), not a cloud course", "phase": "post-v1.0"},
+    {"decision": "Email greeting: generic 'Estimado/a Profesor/a' (no name placeholder)", "rationale": "User asked for a single template without a name slot", "phase": "post-v1.0"},
+    {"decision": "4 courses with no CTF fit: CBS02, CBS04, CBS08, BMA20", "rationale": "DB and early OS courses have no direct CTF technique alignment in the 23-scenario catalog", "phase": "post-v1.0"}
   ],
   "uncommitted_files": [
-    ".planning/STATE.md (modified)",
+    "scripts/generate_pdf_es.py (untracked — should commit)",
     ".planning/config.json (modified)",
-    "CLAUDE.md (modified)",
+    ".claude/ (new directory)",
     ".planning/README.md (untracked)",
     ".planning/phases/04-llm-atp-chain-kill-chains-final-review/04-VERIFICATION.md (untracked)",
     "BRIEF.md (untracked)",
+    "curso-profesor-L4.csv (untracked)",
+    "cursos_que_pueden_tener_interes_en_cont_adicionales.txt (untracked)",
     "docs/contenidos_adicionales_inictel/ (untracked)",
-    "docs/curricula/ (untracked)",
-    "docs/images/ (untracked)"
+    "docs/images/ (untracked)",
+    "horario2026.xlsx (untracked)",
+    "profesores-email.jpeg (untracked)"
   ],
-  "next_action": "Check https://ollerenac.github.io/some_kill_chains/ to confirm GitHub Pages deployment. Project v1.0 is otherwise complete.",
-  "context_notes": "Project v1.0 is complete. All 4 phases done (23 scenarios, 28 flags, 4044-line kill-chain catalog). Both EN and ES versions of SCENARIOS and KILL-CHAINS committed and pushed. GitHub Actions workflow will deploy to Pages. No open work items remain."
+  "next_action": "Commit scripts/generate_pdf_es.py, then push commits 9da138e + 2e85276 + 8c10eb8 to origin/main",
+  "context_notes": "Project v1.0 complete. All recent work is professor-outreach tooling: PDF of catalog (ES), CTF-course mapping, invitation email, professor contact priority list. 19 unique professors identified across 21 courses. Next likely request: follow up on email outreach, or produce EN version of PDF."
 }
