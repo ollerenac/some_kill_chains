@@ -1,0 +1,55 @@
+{
+  "version": "1.0",
+  "timestamp": "2026-06-11T17:04:11.874Z",
+  "phase": "01",
+  "phase_name": "scenario-proposals-document",
+  "phase_dir": ".planning/phases/01-scenario-proposals-document",
+  "plan": 1,
+  "task": 1,
+  "total_tasks": 1,
+  "status": "paused",
+  "completed_tasks": [
+    {
+      "id": 1,
+      "name": "Author all 23 scenario entries and write SCENARIOS.md",
+      "status": "done",
+      "commit": "3030b44"
+    }
+  ],
+  "remaining_tasks": [],
+  "blockers": [],
+  "human_actions_pending": [
+    {
+      "action": "Read SCENARIOS.md end-to-end as a lab instructor and make approve/revise/reject decisions per scenario entry",
+      "context": "D-10 / success-criterion-10: user must confirm the document is self-contained enough for approval decisions without reading any other document. This is the Phase 1 gate — Phase 2 cannot begin until this approval is given.",
+      "blocking": true
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "CVE-04 framed as LPE path, title references both CVE-2021-1675 and CVE-2021-34527",
+      "rationale": "RESEARCH.md Pitfall 1 Option C — LPE path consistent with 2-VM standalone design; RCE path would require external attacker position",
+      "phase": "01"
+    },
+    {
+      "decision": "CC-02 narrative uses 'cgroup notification path' without naming release_agent",
+      "rationale": "RESEARCH.md Pitfall 4 — release_agent is Phase 3 kill-chain detail, not Phase 1 proposal content",
+      "phase": "01"
+    },
+    {
+      "decision": "ATP-04 framed as no-malware constraint (no compiled payloads/shellcode/implants), not living-off-the-land",
+      "rationale": "CR-01 code review finding — mitm6/ntlmrelayx/evil-winrm are not OS-native binaries; LotL claim was factually false",
+      "phase": "01"
+    },
+    {
+      "decision": "Section header corrected to 'Multi-Step APT Chains' (not ATP)",
+      "rationale": "WR-04 — APT is the correct industry term for Conti/HAFNIUM/Volt Typhoon; ATP prefix on IDs is locked by REQUIREMENTS.md and unchanged",
+      "phase": "01"
+    }
+  ],
+  "uncommitted_files": [
+    "CLAUDE.md (modified, unrelated to phase — do not commit with phase work)"
+  ],
+  "next_action": "User reviews SCENARIOS.md and approves Phase 1 gate. Once approved, run /gsd:execute-phase 2 to begin kill-chain authoring.",
+  "context_notes": "Phase 1 is fully complete. SCENARIOS.md has 23 entries across 6 domains, all acceptance criteria pass, code review fixes applied, verification report written. The only outstanding item is the human approval gate (D-10). CLAUDE.md has uncommitted changes unrelated to this phase — do not include in phase commits."
+}
