@@ -40,7 +40,10 @@ Plans:
 2. All 9 AD/Network scenarios have complete kill-chain write-ups: numbered stages, attacker actions, expected outputs, and at least one MITRE TTP code per stage
 3. The two multi-step ATP scenarios in this set (AD-05) have Flag 1 and Flag 2 placements explicitly marked at the correct lateral movement boundaries
 4. Each kill-chain is internally consistent with the scenario description written in Phase 1
-**Plans:** TBD
+**Plans:** 0/1 plans complete
+
+Plans:
+- [ ] 02-01-PLAN.md — Kill-chain methodology preamble + kill-chains for AD-01..05, NET-01..04
 
 ### Phase 3: CVE + Cloud/Container Kill-Chains
 **Goal:** Fully detailed kill-chain write-ups for all 7 CVE weaponization and Cloud/Container scenarios (CVE-01..04, CC-01..03), following the methodology established in Phase 2. CVE scenarios must specify the exact exploit authoring steps students must implement themselves.
@@ -73,6 +76,6 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Scenario Proposals Document | 1/1 | Complete   | 2026-06-11 |
-| 2. Kill-Chain Methodology + AD/Network | 0/1 | Not started | - |
+| 2. Kill-Chain Methodology + AD/Network | 0/1 | Planned (ready to execute) | - |
 | 3. CVE + Cloud/Container Kill-Chains | 0/1 | Not started | - |
 | 4. LLM + ATP Chain Kill-Chains + Final Review | 0/1 | Not started | - |

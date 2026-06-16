@@ -1017,7 +1017,7 @@ NET-04: Attacker → [Scapy DNS race] → Resolver (poisoned cache)
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **AD-03 ACL abuse chain — WriteDACL vs GenericWrite starting point**
    - What we know: BloodHound CE may surface either WriteDACL (on group) or GenericWrite (on user) as the available edge, depending on the lab's AD configuration.

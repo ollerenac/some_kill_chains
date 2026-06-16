@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: planned
-last_updated: "2026-06-12T06:10:00Z"
+status: in_progress
+last_updated: "2026-06-12T07:21:00Z"
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 1
+  total_plans: 2
   completed_plans: 1
   percent: 25
 ---
@@ -16,7 +16,7 @@ progress:
 
 ## Current Phase
 
-Phase 1: Scenario Proposals Document — Planned (Ready to execute)
+Phase 2: Kill-Chain Methodology + AD/Network Scenarios — Planned (Ready to execute)
 
 ## Project Reference
 
@@ -27,7 +27,9 @@ See: .planning/PROJECT.md (updated 2026-06-11)
 
 ## Phase History
 
-(none yet)
+| Phase | Status | Completed | Notes |
+|-------|--------|-----------|-------|
+| 1: Scenario Proposals Document | Complete ✓ | 2026-06-12 | SCENARIOS.md (23 scenarios), approved by user |
 
 ## Blockers
 
