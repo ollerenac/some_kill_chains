@@ -8,6 +8,8 @@ List:    GET  /api/challenge/all/wargame-challenge?pageNum=1&pageSize=200&...
 Detail:  GET  /api/challenge/{challengeUuid}/wargame-challenge
 """
 
+import os
+import sys
 import requests
 import re
 import time
@@ -23,10 +25,17 @@ from reportlab.platypus import (
 from reportlab.lib.enums import TA_LEFT, TA_CENTER
 
 # ── Config ──────────────────────────────────────────────────────────────────
-BASE_URL  = "http://192.168.22.28"
-LOGIN_ID  = "user1"
-PASSWORD  = "Bl1nk182@"
-OUT_PDF   = "offen_wargame_catalog.pdf"
+BASE_URL = os.environ.get("OFFEN_BASE_URL", "http://192.168.22.28")
+LOGIN_ID = os.environ.get("OFFEN_LOGIN_ID", "")
+PASSWORD = os.environ.get("OFFEN_PASSWORD", "")
+OUT_PDF  = os.environ.get("OFFEN_OUT_PDF", "offen_wargame_catalog.pdf")
+
+if not LOGIN_ID or not PASSWORD:
+    sys.exit(
+        "ERROR: Set OFFEN_LOGIN_ID and OFFEN_PASSWORD environment variables.\n"
+        "  export OFFEN_LOGIN_ID=user1\n"
+        "  export OFFEN_PASSWORD=<password>"
+    )
 
 LIST_URL  = (
     BASE_URL
