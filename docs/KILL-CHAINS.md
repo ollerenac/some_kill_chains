@@ -2848,6 +2848,7 @@ The following checklist was applied before finalizing this document:
 | Phase 4: ATP-03 SSRF Stage 2 targets 169.254.169.254 and response includes `Token` field containing K8s service account JWT (per D-14) | PASS |
 | Phase 4: ATP-04 Stage 2 uses ntlmrelayx targeting `ldaps://` (not `ldap://`) to create domain account via LDAP relay | PASS |
 | Phase 4: `grep -c "^### \[FLAG [12]\]" docs/KILL-CHAINS.md` returns 28 (17 Phase 2-3 + 3 LLM×1 flag each + 4 ATP×2 flags each = 17+3+8 = 28) | PASS |
+| Phase 4 Final Review: All 4 consistency dimensions checked across all 23 scenarios — zero open findings | PASS |
 
 ---
 
@@ -2865,9 +2866,10 @@ The scenario places a flag string literal inside the LLM's system prompt, protec
 
 ---
 
-### Stage 1: System Prompt Override via Persona Hijack
+#### Stage 1: System Prompt Override via Persona Hijack
 
 **Action:** You defeat Layer 1 (system prompt guardrails) by sending a DAN-style role-play prompt that instructs the model to adopt an unrestricted persona, overriding the system-level behavioral constraints.
+
 **Command:**
 ```bash
 # curl to chatbot API endpoint
@@ -2887,9 +2889,10 @@ curl -s -X POST http://LLM_SERVER_IP:PORT/chat \
 
 ---
 
-### Stage 2: Regex Filter Evasion via Base64 Encoding
+#### Stage 2: Regex Filter Evasion via Base64 Encoding
 
 **Action:** You defeat Layer 2 (regex keyword filter) by base64-encoding the forbidden instruction text so the pattern-matching filter fails to match it, then include a decode instruction in the prompt body.
+
 **Command:**
 ```bash
 # Step 1: Encode the forbidden instruction
@@ -2909,9 +2912,10 @@ curl -s -X POST http://LLM_SERVER_IP:PORT/chat \
 
 ---
 
-### Stage 3: Semantic Classifier Evasion via Simulation Frame
+#### Stage 3: Semantic Classifier Evasion via Simulation Frame
 
 **Action:** You defeat Layer 3 (semantic classifier) by wrapping the injection in a fictional debugging-session context so the classifier scores the request as a legitimate technical task rather than a prompt injection attempt.
+
 **Command:**
 ```bash
 # Send the full chained prompt: DAN persona + base64 decode instruction + simulation frame
@@ -2930,6 +2934,7 @@ curl -s -X POST http://LLM_SERVER_IP:PORT/chat \
 ### [FLAG 1] Stage 4: Flag Capture — LLM System Prompt
 
 **Action:** You retrieve Flag 1 by reading the flag string that the model has now quoted from its system prompt context in the previous response.
+
 **Command:**
 ```bash
 # Flag appears in the LLM response above — no additional command required.
@@ -2954,9 +2959,10 @@ The chatbot uses a RAG pipeline — it retrieves context chunks from a vector da
 
 ---
 
-### Stage 1: Target Application Enumeration
+#### Stage 1: Target Application Enumeration
 
 **Action:** You enumerate the chatbot application's upload and chat endpoints to map the attack surface before crafting the injection payload.
+
 **Command:**
 ```bash
 # Discover available routes
@@ -2979,9 +2985,10 @@ curl -s -X POST http://LLM_SERVER_IP:PORT/chat \
 
 ---
 
-### Stage 2: Malicious Document Crafting — RAG Poison Payload
+#### Stage 2: Malicious Document Crafting — RAG Poison Payload
 
 **Action:** You craft a plain-text .txt document with legitimate-looking IT support FAQ content that embeds a SYSTEM OVERRIDE injection instruction in its body, designed to fire when the RAG pipeline retrieves this chunk.
+
 **Command:**
 ```bash
 cat > payload.txt << 'EOF'
@@ -3012,9 +3019,10 @@ Note: the injection instruction is embedded in legitimate-looking content — cl
 
 ---
 
-### Stage 3: Document Ingestion via /ingest Endpoint
+#### Stage 3: Document Ingestion via /ingest Endpoint
 
 **Action:** You upload the malicious document to the chatbot's RAG ingestion endpoint, causing it to be chunked, embedded, and stored in the vector database alongside legitimate knowledge base entries.
+
 **Command:**
 ```bash
 curl -X POST http://LLM_SERVER_IP:PORT/ingest \
@@ -3033,9 +3041,10 @@ Note: closest ATT&CK mapping for document-as-delivery-vector; primary OWASP mapp
 
 ---
 
-### Stage 4: Trigger Query — Topic-Matched Benign Request
+#### Stage 4: Trigger Query — Topic-Matched Benign Request
 
 **Action:** You send a benign query about the poisoned document's topic to trigger the RAG pipeline to retrieve the malicious chunk and execute the embedded injection instruction.
+
 **Command:**
 ```bash
 curl -X POST http://LLM_SERVER_IP:PORT/chat \
@@ -3054,6 +3063,7 @@ Note: The query topic must match the poisoned document's subject — this is dis
 ### [FLAG 1] Stage 5: Flag Capture — LLM Response Body
 
 **Action:** You retrieve Flag 1 from the LLM's response, which the injection instruction caused it to emit verbatim at the start of its answer.
+
 **Command:**
 ```bash
 # Flag appears in the response from Stage 4.
@@ -3078,9 +3088,10 @@ The LLM application exposes a chat history endpoint that retrieves conversation 
 
 ---
 
-### Stage 1: API Endpoint Discovery
+#### Stage 1: API Endpoint Discovery
 
 **Action:** You enumerate the LLM application's API surface to locate the chat history endpoint and confirm it accepts unauthenticated requests.
+
 **Command:**
 ```bash
 # Discover available routes
@@ -3101,9 +3112,10 @@ curl -v http://LLM_SERVER_IP:PORT/history/1
 
 ---
 
-### Stage 2: Ownership Model Verification — No Auth Check
+#### Stage 2: Ownership Model Verification — No Auth Check
 
 **Action:** You confirm the endpoint has no user ID ownership enforcement by accessing a different user's chat history without any session token or credential.
+
 **Command:**
 ```bash
 # Test user_id=2 — if response is not 401/403, IDOR is confirmed
@@ -3123,9 +3135,10 @@ Note: no Authorization header is required and no ownership check is enforced on 
 
 ---
 
-### Stage 3: Sequential ID Enumeration — Bruteforce Chat History
+#### Stage 3: Sequential ID Enumeration — Bruteforce Chat History
 
 **Action:** You iterate over sequential integer user IDs to enumerate all accessible chat histories, looking for sessions belonging to privileged users that contain the flag.
+
 **Command:**
 ```python
 import requests
@@ -3157,9 +3170,10 @@ Note: closest ATT&CK analog for sequential integer enumeration; primary classifi
 
 ---
 
-### Stage 4: Targeted Record Retrieval — Privileged User Session
+#### Stage 4: Targeted Record Retrieval — Privileged User Session
 
 **Action:** You retrieve the full chat history for the privileged user ID identified during enumeration, extracting the complete conversation that contains the embedded flag.
+
 **Command:**
 ```bash
 curl -s http://LLM_SERVER_IP:PORT/history/PRIVILEGED_USER_ID | jq .
@@ -3187,6 +3201,7 @@ Note: closest ATT&CK mapping for data exfiltration from a cloud-adjacent API sto
 ### [FLAG 1] Stage 5: Flag Capture — Privileged User Chat Session
 
 **Action:** You retrieve Flag 1 from the privileged user's chat history record exposed by the unauthenticated IDOR endpoint.
+
 **Command:**
 ```bash
 curl -s http://LLM_SERVER_IP:PORT/history/PRIVILEGED_USER_ID \
