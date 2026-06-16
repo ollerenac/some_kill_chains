@@ -73,7 +73,7 @@ Use functional role names in stage headings, not OS names or VM numbers:
 
 | Role | Label | When to use |
 |------|-------|-------------|
-| Kali attacker VM | `[Attacker]` | Only when a stage command runs on the victim; omit the tag if all commands in the stage run on the attacker |
+| Kali attacker VM | `[Attacker]` | Only when all commands in the stage run on the attacker VM; omit the tag — the attacker is the default unlabeled execution context |
 | Windows Domain Controller | `[DC]` | When the command executes on the DC |
 | Windows member server | `[MemberSrv]` | When the command executes on the member server |
 | Ubuntu pivot / service host | `[PivotHost]` | When the command executes on an Ubuntu victim |
@@ -865,7 +865,7 @@ C:\Tools\Rubeus.exe kerberoast /nowrap /outfile:C:\loot\tgs.txt
 
 ---
 
-#### Stage 8: Hash Exfiltration [MemberSrv]
+#### Stage 8: Hash Exfiltration
 
 **Action:** You retrieve the TGS hash file from the member server to the attacker machine
 for offline cracking.
@@ -884,7 +884,7 @@ get tgs.txt
 getting file \loot\tgs.txt of size NNNN as tgs.txt
 ```
 
-**TTP:** [T1041 — Exfiltration Over C2 Channel](https://attack.mitre.org/techniques/T1041/) · Exfiltration
+**TTP:** [T1039 — Data from Network Shared Drive](https://attack.mitre.org/techniques/T1039/) · Collection
 
 ---
 
@@ -1537,7 +1537,7 @@ The following checklist was applied before finalizing this document:
 | All command blocks use ALLCAPS placeholders — no hardcoded IPs or passwords (except `corp.local`, `127.0.0.1`, well-known ports) | PASS |
 | AD-05 has exactly two `[FLAG N]` headings — Flag 1 at MemberSrv, Flag 2 at DC | PASS |
 | No other scenario has more than one flag | PASS |
-| Responder.conf `SMB = Off` / `HTTP = Off` warning appears in AD-02, AD-05, and NET-01 | PASS — AD-02 Stage 2, AD-05 Stage 2, NET-01 differentiator note |
+| Responder.conf `SMB = Off` / `HTTP = Off` warning appears in AD-02 and AD-05 (active poisoning + relay scenarios) | PASS — AD-02 Stage 2, AD-05 Stage 2. NET-01 uses analysis-only mode (`-A`); warning not required. |
 | AD-03 Stage 2 explicitly states: download SharpHound from BloodHound CE UI → Settings → Download Collectors | PASS |
 | NET-02 Stage 1 ntlmrelayx command uses `ldaps://` not `ldap://` | PASS |
 | AD-04 Stage 2 Certipy command uses `-upn` flag | PASS |
