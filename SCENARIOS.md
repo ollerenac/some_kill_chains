@@ -47,7 +47,7 @@ You hold a low-privileged domain account and discover that the organization has 
 **Difficulty:** Hard
 **VMs:** 3
 
-You enter a three-machine Windows domain environment with only an attacker workstation and no credentials. In the first phase, you deploy Responder to poison LLMNR broadcast requests on the internal segment and use ntlmrelayx to relay captured hashes over SMB to a domain member server — establishing a foothold that yields the first flag. With your position on the pivot server established, you shift to the second phase: using Rubeus you request service tickets for Kerberoastable accounts, crack the ticket offline with Hashcat, and use the recovered credentials with evil-winrm to move laterally to the domain controller and retrieve the second flag. Each lateral movement hop uses a distinct protocol — SMB for the first, WinRM for the second.
+You enter a three-machine Windows domain environment with only an attacker workstation and no credentials. Deploying Responder to poison LLMNR broadcast requests on the internal segment, you use ntlmrelayx to relay captured hashes over SMB to a domain member server — establishing a foothold that yields the first flag. With your pivot position secured, you use Rubeus to request service tickets for Kerberoastable accounts, crack the ticket offline with Hashcat, and use the recovered credentials with evil-winrm to move laterally to the domain controller and retrieve the second flag. Each lateral movement hop uses a distinct protocol — SMB for the first, WinRM for the second.
 
 ---
 
@@ -76,7 +76,7 @@ You observe that the target Windows domain has no IPv6 management in place, leav
 **Difficulty:** Easy
 **VMs:** 2
 
-You are on the same Layer 2 segment as two communicating hosts and must intercept their traffic. Using bettercap, you send gratuitous ARP replies to poison the ARP caches of both targets, routing their traffic through your machine and positioning yourself as the man-in-the-middle. You strip transport-layer protection from HTTP connections and observe the plaintext traffic flowing between the hosts, capturing the credentials that are transmitted and using them to retrieve the flag.
+You are on the same Layer 2 segment as two communicating hosts and must intercept their traffic. Using bettercap, you send gratuitous ARP replies to poison the ARP caches of both targets, routing their traffic through your machine and positioning yourself as the man-in-the-middle. You exploit bettercap's HTTPS proxy to downgrade encrypted connections to plaintext HTTP, capturing the credentials transmitted by the hosts and using them to retrieve the flag.
 
 ---
 
@@ -123,7 +123,7 @@ You discover a Java web application built on Spring MVC, deployed as a WAR on a 
 **Difficulty:** Medium
 **VMs:** 2
 
-You have obtained a low-privileged interactive session on a Windows Server target and need to escalate to SYSTEM. The Windows Print Spooler service is running and the target is unpatched against PrintNightmare. You author a C or Python payload that calls `RpcAddPrinterDriverEx` to instruct the Spooler service — which runs as SYSTEM — to load a malicious DLL you supply, injecting your code into a SYSTEM-level process. Once your payload executes with elevated privileges, you retrieve the flag from a location accessible only to SYSTEM. This scenario exercises the local privilege escalation path, requiring a pre-existing foothold rather than an external network position.
+You have obtained a low-privileged interactive session on a Windows Server target and need to escalate to SYSTEM. The Windows Print Spooler service is running and the target is unpatched against PrintNightmare. You author a C or Python payload that instructs the Windows Print Spooler service — which runs as SYSTEM — to load a malicious DLL you supply, injecting your code into a SYSTEM-level process. Once your payload executes with elevated privileges, you retrieve the flag from a location accessible only to SYSTEM. This scenario exercises the local privilege escalation path, requiring a pre-existing foothold rather than an external network position.
 
 ---
 
@@ -185,7 +185,7 @@ You interact with an LLM application that stores conversation history and expose
 
 ---
 
-## Multi-Step ATP Chains
+## Multi-Step APT Chains
 
 ### ATP-01: HAFNIUM-Style Webshell and Lateral Movement  [Multi-step — 2 flags]
 
@@ -219,4 +219,4 @@ You identify an SSRF vulnerability in a cloud-hosted application and use it to q
 **Difficulty:** Hard
 **VMs:** 3
 
-You operate under a strict living-off-the-land constraint — no malware, no custom binaries, no lateral tooling beyond what the environment provides. Using mitm6 to deploy a rogue DHCPv6 server and relaying the resulting authentication attempts to LDAP via ntlmrelayx, you create a new privileged domain account using only the credentials that domain hosts voluntarily hand you during IPv6 name resolution. With the new account, you use evil-winrm to authenticate to a domain member server and retrieve the first flag. From the pivot, you enumerate service account SPNs with Kerberoasting, crack the recovered ticket hash offline, and use the resulting credential with a second lateral movement protocol to authenticate to the domain controller and retrieve the final flag — without executing a single piece of malware from start to finish.
+You operate under a no-malware constraint — no compiled payloads, no shellcode, no persistent implants. Using mitm6 to deploy a rogue DHCPv6 server and relaying the resulting authentication attempts to LDAP via ntlmrelayx, you create a new privileged domain account without touching the filesystem of any target host. With the new account, you use evil-winrm to authenticate to a domain member server and retrieve the first flag. From the pivot, you enumerate service account SPNs with Kerberoasting, crack the recovered ticket hash offline, and use the resulting credential with SMBExec or DCOM to authenticate to the domain controller and retrieve the final flag — the entire chain executed without dropping a single malicious file.
