@@ -1,0 +1,40 @@
+# Project State
+
+## Current Phase
+Phase 1: Scenario Proposals Document — Not Started
+
+## Project Reference
+See: .planning/PROJECT.md (updated 2026-06-11)
+
+**Core value:** Students must deeply understand each attack technique by building and executing it themselves.
+**Current focus:** Phase 1 — Scenario Proposals Document
+
+## Phase History
+(none yet)
+
+## Blockers
+(none)
+
+## Accumulated Context
+
+### Decisions
+(none yet)
+
+### Todos
+(none yet)
+
+### Notes
+- 23 scenarios total across 6 domains: AD (5), NET (4), CVE (4), CC (3), LLM (3), ATP (4)
+- Phase 1 output is `SCENARIOS.md` — proposals only, no kill-chain detail
+- Phase 2 begins only after Phase 1 is approved by user
+- Kill-chain methodology must be agreed at the start of Phase 2 before scenario authoring begins
+- CVE scenarios: no Metasploit at any stage; students author all exploit/weaponization code
+
+## Performance Metrics
+
+| Metric | Value |
+|--------|-------|
+| Phases defined | 4 |
+| Requirements mapped | 23/23 |
+| Phases complete | 0/4 |
+| Plans complete | 0/4 |

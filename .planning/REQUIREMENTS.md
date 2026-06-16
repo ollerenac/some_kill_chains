@@ -126,33 +126,35 @@ Deferred to future release — not in current roadmap.
 
 ## Traceability
 
-*Updated during roadmap creation.*
+*Updated: 2026-06-11 after roadmap creation.*
 
-| Requirement | Phase | Status |
-|-------------|-------|--------|
-| AD-01 | Phase 1 | Pending |
-| AD-02 | Phase 1 | Pending |
-| AD-03 | Phase 1 | Pending |
-| AD-04 | Phase 1 | Pending |
-| AD-05 | Phase 1 | Pending |
-| NET-01 | Phase 1 | Pending |
-| NET-02 | Phase 1 | Pending |
-| NET-03 | Phase 1 | Pending |
-| NET-04 | Phase 1 | Pending |
-| CVE-01 | Phase 1 | Pending |
-| CVE-02 | Phase 1 | Pending |
-| CVE-03 | Phase 1 | Pending |
-| CVE-04 | Phase 1 | Pending |
-| CC-01 | Phase 1 | Pending |
-| CC-02 | Phase 1 | Pending |
-| CC-03 | Phase 1 | Pending |
-| LLM-01 | Phase 1 | Pending |
-| LLM-02 | Phase 1 | Pending |
-| LLM-03 | Phase 1 | Pending |
-| ATP-01 | Phase 1 | Pending |
-| ATP-02 | Phase 1 | Pending |
-| ATP-03 | Phase 1 | Pending |
-| ATP-04 | Phase 1 | Pending |
+Each REQ-ID is assigned to the phase where its primary deliverable is produced. Phase 1 produces the proposal entry for all 23 scenarios. Phases 2-4 produce the kill-chain write-up for each scenario's domain group.
+
+| Requirement | Phase 1 (Proposal) | Kill-Chain Phase | Status |
+|-------------|-------------------|-----------------|--------|
+| AD-01 | Phase 1 | Phase 2 | Pending |
+| AD-02 | Phase 1 | Phase 2 | Pending |
+| AD-03 | Phase 1 | Phase 2 | Pending |
+| AD-04 | Phase 1 | Phase 2 | Pending |
+| AD-05 | Phase 1 | Phase 2 | Pending |
+| NET-01 | Phase 1 | Phase 2 | Pending |
+| NET-02 | Phase 1 | Phase 2 | Pending |
+| NET-03 | Phase 1 | Phase 2 | Pending |
+| NET-04 | Phase 1 | Phase 2 | Pending |
+| CVE-01 | Phase 1 | Phase 3 | Pending |
+| CVE-02 | Phase 1 | Phase 3 | Pending |
+| CVE-03 | Phase 1 | Phase 3 | Pending |
+| CVE-04 | Phase 1 | Phase 3 | Pending |
+| CC-01 | Phase 1 | Phase 3 | Pending |
+| CC-02 | Phase 1 | Phase 3 | Pending |
+| CC-03 | Phase 1 | Phase 3 | Pending |
+| LLM-01 | Phase 1 | Phase 4 | Pending |
+| LLM-02 | Phase 1 | Phase 4 | Pending |
+| LLM-03 | Phase 1 | Phase 4 | Pending |
+| ATP-01 | Phase 1 | Phase 4 | Pending |
+| ATP-02 | Phase 1 | Phase 4 | Pending |
+| ATP-03 | Phase 1 | Phase 4 | Pending |
+| ATP-04 | Phase 1 | Phase 4 | Pending |
 
 **Coverage:**
 - v1 requirements: 23 total
@@ -161,4 +163,4 @@ Deferred to future release — not in current roadmap.
 
 ---
 *Requirements defined: 2026-06-11*
-*Last updated: 2026-06-11 after initial definition*
+*Last updated: 2026-06-11 after roadmap creation*
