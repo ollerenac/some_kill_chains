@@ -1,0 +1,47 @@
+name: Publish CTF Catalog
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - 'SCENARIOS.md'
+      - 'SCENARIOS_ES.md'
+      - 'docs/KILL-CHAINS.md'
+      - 'docs/KILL-CHAINS_ES.md'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare publish artifacts
+        run: |
+          mkdir -p _site
+          cp SCENARIOS.md _site/
+          cp SCENARIOS_ES.md _site/
+          cp docs/KILL-CHAINS.md _site/
+          [ -f docs/KILL-CHAINS_ES.md ] && cp docs/KILL-CHAINS_ES.md _site/ || true
+          # Simple index linking all four files
+          cat > _site/index.md <<'EOF'
+          # CTF Scenario Catalog — Advanced Cybersecurity Lab
+
+          | Document | Language |
+          |----------|----------|
+          | [Scenario Proposals](SCENARIOS.md) | English |
+          | [Propuestas de Escenarios](SCENARIOS_ES.md) | Español |
+          | [Kill-Chain Catalog](KILL-CHAINS.md) | English |
+          | [Catálogo de Kill-Chains](KILL-CHAINS_ES.md) | Español |
+          EOF
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./_site
+          publish_branch: gh-pages
+          enable_jekyll: true

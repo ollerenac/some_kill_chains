@@ -109,12 +109,12 @@ Identificas una aplicación Java que registra entradas controladas por el atacan
 
 ---
 
-### CVE-03: Spring4Shell — CVE-2022-22965
+### CVE-03: Apache Struts S2-045 — CVE-2017-5638 (Vector de la Brecha Equifax)
 
 **Dificultad:** Medio
 **VMs:** 2
 
-Descubres una aplicación web Java construida sobre Spring MVC, desplegada como WAR en un contenedor de servlets, y ejecutándose en Java 9 o posterior — las condiciones previas para CVE-2022-22965. Escribes el exploit: una solicitud HTTP que abusa del mecanismo de vinculación de datos de Spring para recorrer la cadena de propiedades ClassLoader a través de AccessLogValve, manipulando la configuración de registro para escribir un archivo JSP webshell en el directorio de despliegue de la aplicación. Una vez plantado el webshell, lo usas para ejecutar comandos y recuperar la bandera embebida en el servidor objetivo.
+Te enfrentas a una aplicación web Apache Struts 2 ejecutándose en un contenedor Docker en el servidor objetivo. La aplicación procesa solicitudes de carga de archivos multiparte usando el parser vulnerable de Jakarta — la misma mala configuración que posibilitó la brecha de Equifax en 2017. Escribes un script de exploit en Python que inyecta una expresión OGNL en el encabezado Content-Type de una solicitud HTTP POST, eludiendo las restricciones de seguridad de Struts 2 y ejecutando comandos arbitrarios del sistema operativo en el servidor. No se necesita un webshell JSP — el exploit devuelve la salida de los comandos directamente en la respuesta HTTP. Usas esta ejecución remota de comandos para recuperar la bandera del servidor objetivo.
 
 ---
 
