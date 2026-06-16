@@ -3051,12 +3051,13 @@ curl -X POST http://LLM_SERVER_IP:PORT/chat \
   -H "Content-Type: application/json" \
   -d '{"message": "What is the process for resetting a password?"}'
 ```
-Note: The query topic must match the poisoned document's subject — this is discovered through lightweight enumeration of the chatbot's declared domain in Stage 1, not via a hint in the challenge (per D-08).
 **Expected Output:**
 ```
 {"response": "CTF{...} To reset your VPN password, contact IT helpdesk at ext. 1234 or submit a ticket at helpdesk.corp.local."}
 ```
 **TTP:** [LLM02 — Insecure Output Handling](https://owasp.org/www-project-top-10-for-large-language-model-applications/) · OWASP LLM Top 10 2025
+
+Note: The query topic must match the poisoned document's subject — this is discovered through lightweight enumeration of the chatbot's declared domain in Stage 1, not via a hint in the challenge (per D-08).
 
 ---
 
@@ -3470,15 +3471,14 @@ exit 0
 EOF
 chmod +x backdoor_update.sh
 ```
+**Expected Output:** `backdoor_update.sh` created and executable (`ls -la backdoor_update.sh` confirms `-rwxr-xr-x`).
+
+**TTP:** [T1195.002 — Supply Chain Compromise: Compromise Software Supply Chain](https://attack.mitre.org/techniques/T1195/002/) · Initial Access
 
 Note: The backdoored script blends in with legitimate update activity. The flag-read
 callback fires in the background — the cron job completes normally, masking the
 compromise. This is the supply chain teaching moment: update pipelines that do not verify
 package integrity (no checksum, no signature) are trivially exploitable.
-
-**Expected Output:** `backdoor_update.sh` created and executable (`ls -la backdoor_update.sh` confirms `-rwxr-xr-x`).
-
-**TTP:** [T1195.002 — Supply Chain Compromise: Compromise Software Supply Chain](https://attack.mitre.org/techniques/T1195/002/) · Initial Access
 
 ---
 
