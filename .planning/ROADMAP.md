@@ -72,7 +72,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Scenario Proposals Document | 0/1 | Not started | - |
+| 1. Scenario Proposals Document | 0/1 | Planned | - |
 | 2. Kill-Chain Methodology + AD/Network | 0/1 | Not started | - |
 | 3. CVE + Cloud/Container Kill-Chains | 0/1 | Not started | - |
 | 4. LLM + ATP Chain Kill-Chains + Final Review | 0/1 | Not started | - |
