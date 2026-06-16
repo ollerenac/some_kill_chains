@@ -21,9 +21,9 @@ Students must deeply understand each attack technique by building and executing 
 - [ ] Scenario mix: ~10 standalone (1 flag, 1 skill) + ~10 multi-step ATP-style (2 flags, lateral movement)
 - [ ] Difficulty distribution: 5 easy / 10 medium / 5 hard
 - [ ] CVE-based scenarios require students to author exploit code — no Metasploit / full-framework shortcuts
-- [ ] Phase 1 deliverable: concise document with scenario titles and descriptions only
-- [ ] Phase 2 deliverable: full kill-chain stages per scenario with MITRE ATT&CK TTP codes
-- [ ] Kill-chain methodology agreed before Phase 2 implementation begins
+- [x] Phase 1 deliverable: concise document with scenario titles and descriptions only — `docs/SCENARIOS.md` complete (2026-06-12)
+- [x] Phase 2 deliverable: full kill-chain stages per scenario with MITRE ATT&CK TTP codes — `docs/KILL-CHAINS.md` complete (2026-06-12)
+- [x] Kill-chain methodology agreed before Phase 2 implementation begins — methodology preamble in KILL-CHAINS.md
 
 ### Out of Scope
 
@@ -83,4 +83,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-11 after initialization*
+*Last updated: 2026-06-12 — Phase 2 complete. Phases 1+2 validated. Phase 3 (CVE + Cloud/Container) is next.*
