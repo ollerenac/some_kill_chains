@@ -6,7 +6,7 @@
 
 ## Phases
 
-- [ ] **Phase 1: Scenario Proposals Document** — Produce the complete catalog of 23 scenario titles and descriptions, organized by domain
+- [x] **Phase 1: Scenario Proposals Document** — Produce the complete catalog of 23 scenario titles and descriptions, organized by domain (completed 2026-06-11)
 - [ ] **Phase 2: Kill-Chain Methodology + AD/Network Scenarios** — Align on kill-chain methodology, then author detailed kill-chains for AD and Network scenarios
 - [ ] **Phase 3: CVE + Cloud/Container Kill-Chains** — Author detailed kill-chains for CVE weaponization and Cloud/Container scenarios
 - [ ] **Phase 4: LLM + ATP Chain Kill-Chains + Final Review** — Author kill-chains for LLM and ATP scenarios, then final consistency review across all 23
@@ -25,10 +25,10 @@
 2. All six domains are represented with correct scenario counts (AD: 5, NET: 4, CVE: 4, CC: 3, LLM: 3, ATP: 4)
 3. No scenario description contains kill-chain steps, MITRE TTP codes, or implementation specifics — descriptions are pitch-level only
 4. User can read the document end-to-end and make approve/revise/reject decisions on each scenario without needing additional context
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 
 Plans:
-- [ ] 01-01-PLAN.md — Author all 23 scenario entries and produce SCENARIOS.md
+- [x] 01-01-PLAN.md — Author all 23 scenario entries and produce SCENARIOS.md
 
 ### Phase 2: Kill-Chain Methodology + AD/Network Scenarios
 **Goal:** A methodology section establishing the kill-chain format and TTP notation standard, followed by fully detailed kill-chain write-ups for all 9 AD and Network scenarios (AD-01..05, NET-01..04). These are the most technically mature domains and establish the template all subsequent phases follow.
@@ -72,7 +72,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Scenario Proposals Document | 0/1 | Planned | - |
+| 1. Scenario Proposals Document | 1/1 | Complete   | 2026-06-11 |
 | 2. Kill-Chain Methodology + AD/Network | 0/1 | Not started | - |
 | 3. CVE + Cloud/Container Kill-Chains | 0/1 | Not started | - |
 | 4. LLM + ATP Chain Kill-Chains + Final Review | 0/1 | Not started | - |

@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planned
-last_updated: "2026-06-11T09:08:20.929Z"
+last_updated: "2026-06-11T16:29:04.685Z"
 progress:
   total_phases: 4
   completed_phases: 0
@@ -23,7 +23,7 @@ Phase 1: Scenario Proposals Document — Planned (Ready to execute)
 See: .planning/PROJECT.md (updated 2026-06-11)
 
 **Core value:** Students must deeply understand each attack technique by building and executing it themselves.
-**Current focus:** Phase 1 — Scenario Proposals Document
+**Current focus:** Phase 01 — Scenario Proposals Document
 
 ## Phase History
 
