@@ -56,6 +56,7 @@ See: .planning/PROJECT.md (updated 2026-06-11)
 | ID | Slug | Date | Summary |
 |---|---|---|---|
 | 260611-lxt | overlap-check-verify-proposed-scenarios- | 2026-06-11 | Verified all 23 proposed scenarios have zero overlap with 87 deployed OFFen EDU challenges. Report: `.planning/quick/260611-lxt-overlap-check-verify-proposed-scenarios-/OVERLAP-REPORT.md` |
+| 260612-0y4 | generar-pdf-en-espanol-del-catalogo-offe | 2026-06-12 | Script `scripts/scrape_offen_es.py` created — Spanish PDF generator with ES API probe + EN fallback. PDF generation pending (OFFen VM offline). Run: `OFFEN_LOGIN_ID=user1 OFFEN_PASSWORD=<pw> python3 scripts/scrape_offen_es.py` |
 
 ## Performance Metrics
 
