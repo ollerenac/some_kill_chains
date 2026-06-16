@@ -25,7 +25,10 @@
 2. All six domains are represented with correct scenario counts (AD: 5, NET: 4, CVE: 4, CC: 3, LLM: 3, ATP: 4)
 3. No scenario description contains kill-chain steps, MITRE TTP codes, or implementation specifics — descriptions are pitch-level only
 4. User can read the document end-to-end and make approve/revise/reject decisions on each scenario without needing additional context
-**Plans:** TBD
+**Plans:** 1 plan
+
+Plans:
+- [ ] 01-01-PLAN.md — Author all 23 scenario entries and produce SCENARIOS.md
 
 ### Phase 2: Kill-Chain Methodology + AD/Network Scenarios
 **Goal:** A methodology section establishing the kill-chain format and TTP notation standard, followed by fully detailed kill-chain write-ups for all 9 AD and Network scenarios (AD-01..05, NET-01..04). These are the most technically mature domains and establish the template all subsequent phases follow.
