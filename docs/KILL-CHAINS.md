@@ -2797,59 +2797,6 @@ cat /root/flag.txt
 
 ---
 
-## Consistency Verification
-
-The following checklist was applied before finalizing this document:
-
-| Check | Result |
-|-------|--------|
-| Every stage has all four fields: Action, Command, Expected Output, TTP | PASS |
-| All command blocks use ALLCAPS placeholders — no hardcoded IPs or passwords (except `corp.local`, `127.0.0.1`, well-known ports) | PASS |
-| AD-05 has exactly two `[FLAG N]` headings — Flag 1 at MemberSrv, Flag 2 at DC | PASS |
-| No other scenario has more than one flag | PASS |
-| Responder.conf `SMB = Off` / `HTTP = Off` warning appears in AD-02 and AD-05 (active poisoning + relay scenarios) | PASS — AD-02 Stage 2, AD-05 Stage 2. NET-01 uses analysis-only mode (`-A`); warning not required. |
-| AD-03 Stage 2 explicitly states: download SharpHound from BloodHound CE UI → Settings → Download Collectors | PASS |
-| NET-02 Stage 1 ntlmrelayx command uses `ldaps://` not `ldap://` | PASS |
-| AD-04 Stage 2 Certipy command uses `-upn` flag | PASS |
-| NET-04 primary approach is Scapy (student-written script); dnschef is documented as alternative/verification only | PASS |
-| All TTP hyperlinks point to `https://attack.mitre.org/techniques/T####/###/` format | PASS |
-| Methodology section appears before the first scenario kill-chain | PASS |
-| Document opens with a summary paragraph stating its purpose and format standard | PASS |
-| No automated exploit framework commands referenced anywhere in the document | PASS |
-| Actual flag stages by scenario: AD-01(1) + AD-02(1) + AD-03(1) + AD-04(1) + AD-05(2) + NET-01(1) + NET-02(1) + NET-03(1) + NET-04(1) = 10 | PASS |
-| `grep -c "^### \[FLAG [12]\]" docs/KILL-CHAINS.md` returns 10 | PASS |
-| Phase 3: Every CVE/CC stage has all four fields: Action, Command, Expected Output, TTP | PASS |
-| Phase 3: All command blocks use ALLCAPS placeholders — no hardcoded IPs/passwords | PASS |
-| Phase 3: No Metasploit references in any CVE or CC stage | PASS |
-| Phase 3: All CVE kill-chains explicitly identify pre-staged vs student-authored code | PASS |
-| Phase 3: CVE-01 and CVE-02 each contain exactly one `### [FLAG 1]` stage | PASS |
-| Phase 3: CVE-02 uses `X-Api-Version` header and `${jndi:ldap://...}` payload shape | PASS |
-| Phase 3: CVE-02 references `SearchResultReference` as the student-authored referral response | PASS |
-| Phase 3: CVE-03 kill-chain references Struts S2-045 (CVE-2017-5638), not Spring4Shell | PASS |
-| Phase 3: CVE-03 has no scaffold — student authors full ~15–25 line Python 3 OGNL exploit (D-03) | PASS |
-| Phase 3: CVE-03 contains no Spring4Shell/CVE-2022-22965/AccessLogValve residue | PASS |
-| Phase 3: CVE-04 discloses pre-staged DLL vs student-authored loader boundary (D-04) | PASS |
-| Phase 3: CVE-04 uses ADMIN_ACCOUNT_NAME placeholder — no hardcoded account name | PASS |
-| Phase 3: CVE-04 pre-flight includes `from impacket.dcerpc.v5 import rprn` import check | PASS |
-| Phase 3: CVE-03 and CVE-04 each contain exactly one `### [FLAG 1]` stage | PASS |
-| Phase 3: CVE-02 cites JDK 1.8.0_181 constraint in inline warning | PASS |
-| Phase 3: CC-02 Stage 1 includes `stat -fc %T /sys/fs/cgroup/` cgroup v1 verification before escape sequence | PASS |
-| Phase 3: CVE-03 kill-chain references Struts S2-045 (CVE-2017-5638), not Spring4Shell | PASS |
-| Phase 3: `grep -c "^### \[FLAG [12]\]" docs/KILL-CHAINS.md` returns 17 (10 Phase 2 + 7 Phase 3) | PASS |
-| Phase 4: Every LLM/ATP stage has all four fields: Action, Command, Expected Output, TTP | PASS |
-| Phase 4: All LLM kill-chain TTP fields reference OWASP LLM Top 10 2025 IDs (LLM01, LLM02, LLM03, LLM10) — not MITRE ATT&CK which has no LLM-specific entries | PASS |
-| Phase 4: LLM-01 has exactly 3 bypass stages (Persona Hijack, Base64 Encoding, Simulation Frame) + 1 `[FLAG 1]` stage — 4 stages total (per D-01..D-05) | PASS |
-| Phase 4: LLM-02 Stage 3 curl command uses `--data-binary @payload.txt` and targets `/ingest` endpoint (per D-06) | PASS |
-| Phase 4: LLM-02 injection instruction contains `SYSTEM OVERRIDE:` trigger text (per D-07) | PASS |
-| Phase 4: All 4 ATP scenarios have exactly 2 `[FLAG N]` headings each — Flag 1 at first lateral movement boundary, Flag 2 at second lateral movement boundary | PASS |
-| Phase 4: ATP-04 kill-chain contains no instance of "living-off-the-land" or "LotL" (per D-ATP04 Phase 2 decision) | PASS |
-| Phase 4: ATP-01 uses WinRM (first hop) + SMBExec (second hop) — two distinct protocols (per D-10, D-11) | PASS |
-| Phase 4: ATP-02 uses nginx curl\|bash supply chain (first hop) + dnscat2 DNS tunnel (second hop) — two distinct C2 mechanisms (per D-12, D-13) | PASS |
-| Phase 4: ATP-03 SSRF Stage 2 targets 169.254.169.254 and response includes `Token` field containing K8s service account JWT (per D-14) | PASS |
-| Phase 4: ATP-04 Stage 2 uses ntlmrelayx targeting `ldaps://` (not `ldap://`) to create domain account via LDAP relay | PASS |
-| Phase 4: `grep -c "^### \[FLAG [12]\]" docs/KILL-CHAINS.md` returns 28 (17 Phase 2-3 + 3 LLM×1 flag each + 4 ATP×2 flags each = 17+3+8 = 28) | PASS |
-| Phase 4 Final Review: All 4 consistency dimensions checked across all 23 scenarios — zero open findings | PASS |
-
 ---
 
 ## LLM Security Kill-Chains
@@ -4041,3 +3988,57 @@ type C:\Users\Administrator\Desktop\flag2.txt
 **Expected Output:** `CTF{...flag_value_placeholder...}`
 
 **TTP:** — (flag capture, not an adversarial technique)
+
+## Consistency Verification
+
+The following checklist was applied before finalizing this document:
+
+| Check | Result |
+|-------|--------|
+| Every stage has all four fields: Action, Command, Expected Output, TTP | PASS |
+| All command blocks use ALLCAPS placeholders — no hardcoded IPs or passwords (except `corp.local`, `127.0.0.1`, well-known ports) | PASS |
+| AD-05 has exactly two `[FLAG N]` headings — Flag 1 at MemberSrv, Flag 2 at DC | PASS |
+| No other scenario has more than one flag | PASS |
+| Responder.conf `SMB = Off` / `HTTP = Off` warning appears in AD-02 and AD-05 (active poisoning + relay scenarios) | PASS — AD-02 Stage 2, AD-05 Stage 2. NET-01 uses analysis-only mode (`-A`); warning not required. |
+| AD-03 Stage 2 explicitly states: download SharpHound from BloodHound CE UI → Settings → Download Collectors | PASS |
+| NET-02 Stage 1 ntlmrelayx command uses `ldaps://` not `ldap://` | PASS |
+| AD-04 Stage 2 Certipy command uses `-upn` flag | PASS |
+| NET-04 primary approach is Scapy (student-written script); dnschef is documented as alternative/verification only | PASS |
+| All TTP hyperlinks point to `https://attack.mitre.org/techniques/T####/###/` format | PASS |
+| Methodology section appears before the first scenario kill-chain | PASS |
+| Document opens with a summary paragraph stating its purpose and format standard | PASS |
+| No automated exploit framework commands referenced anywhere in the document | PASS |
+| Actual flag stages by scenario: AD-01(1) + AD-02(1) + AD-03(1) + AD-04(1) + AD-05(2) + NET-01(1) + NET-02(1) + NET-03(1) + NET-04(1) = 10 | PASS |
+| `grep -c "^### \[FLAG [12]\]" docs/KILL-CHAINS.md` returns 10 | PASS |
+| Phase 3: Every CVE/CC stage has all four fields: Action, Command, Expected Output, TTP | PASS |
+| Phase 3: All command blocks use ALLCAPS placeholders — no hardcoded IPs/passwords | PASS |
+| Phase 3: No Metasploit references in any CVE or CC stage | PASS |
+| Phase 3: All CVE kill-chains explicitly identify pre-staged vs student-authored code | PASS |
+| Phase 3: CVE-01 and CVE-02 each contain exactly one `### [FLAG 1]` stage | PASS |
+| Phase 3: CVE-02 uses `X-Api-Version` header and `${jndi:ldap://...}` payload shape | PASS |
+| Phase 3: CVE-02 references `SearchResultReference` as the student-authored referral response | PASS |
+| Phase 3: CVE-03 kill-chain references Struts S2-045 (CVE-2017-5638), not Spring4Shell | PASS |
+| Phase 3: CVE-03 has no scaffold — student authors full ~15–25 line Python 3 OGNL exploit (D-03) | PASS |
+| Phase 3: CVE-03 contains no Spring4Shell/CVE-2022-22965/AccessLogValve residue | PASS |
+| Phase 3: CVE-04 discloses pre-staged DLL vs student-authored loader boundary (D-04) | PASS |
+| Phase 3: CVE-04 uses ADMIN_ACCOUNT_NAME placeholder — no hardcoded account name | PASS |
+| Phase 3: CVE-04 pre-flight includes `from impacket.dcerpc.v5 import rprn` import check | PASS |
+| Phase 3: CVE-03 and CVE-04 each contain exactly one `### [FLAG 1]` stage | PASS |
+| Phase 3: CVE-02 cites JDK 1.8.0_181 constraint in inline warning | PASS |
+| Phase 3: CC-02 Stage 1 includes `stat -fc %T /sys/fs/cgroup/` cgroup v1 verification before escape sequence | PASS |
+| Phase 3: CVE-03 kill-chain references Struts S2-045 (CVE-2017-5638), not Spring4Shell | PASS |
+| Phase 3: `grep -c "^### \[FLAG [12]\]" docs/KILL-CHAINS.md` returns 17 (10 Phase 2 + 7 Phase 3) | PASS |
+| Phase 4: Every LLM/ATP stage has all four fields: Action, Command, Expected Output, TTP | PASS |
+| Phase 4: All LLM kill-chain TTP fields reference OWASP LLM Top 10 2025 IDs (LLM01, LLM02, LLM03, LLM10) — not MITRE ATT&CK which has no LLM-specific entries | PASS |
+| Phase 4: LLM-01 has exactly 3 bypass stages (Persona Hijack, Base64 Encoding, Simulation Frame) + 1 `[FLAG 1]` stage — 4 stages total (per D-01..D-05) | PASS |
+| Phase 4: LLM-02 Stage 3 curl command uses `--data-binary @payload.txt` and targets `/ingest` endpoint (per D-06) | PASS |
+| Phase 4: LLM-02 injection instruction contains `SYSTEM OVERRIDE:` trigger text (per D-07) | PASS |
+| Phase 4: All 4 ATP scenarios have exactly 2 `[FLAG N]` headings each — Flag 1 at first lateral movement boundary, Flag 2 at second lateral movement boundary | PASS |
+| Phase 4: ATP-04 kill-chain contains no instance of "living-off-the-land" or "LotL" (per D-ATP04 Phase 2 decision) | PASS |
+| Phase 4: ATP-01 uses WinRM (first hop) + SMBExec (second hop) — two distinct protocols (per D-10, D-11) | PASS |
+| Phase 4: ATP-02 uses nginx curl\|bash supply chain (first hop) + dnscat2 DNS tunnel (second hop) — two distinct C2 mechanisms (per D-12, D-13) | PASS |
+| Phase 4: ATP-03 SSRF Stage 2 targets 169.254.169.254 and response includes `Token` field containing K8s service account JWT (per D-14) | PASS |
+| Phase 4: ATP-04 Stage 2 uses ntlmrelayx targeting `ldaps://` (not `ldap://`) to create domain account via LDAP relay | PASS |
+| Phase 4: `grep -c "^### \[FLAG [12]\]" docs/KILL-CHAINS.md` returns 28 (17 Phase 2-3 + 3 LLM×1 flag each + 4 ATP×2 flags each = 17+3+8 = 28) | PASS |
+| Phase 4 Final Review: All 4 consistency dimensions checked across all 23 scenarios — zero open findings | PASS |
+
