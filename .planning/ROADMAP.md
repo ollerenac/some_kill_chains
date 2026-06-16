@@ -66,7 +66,7 @@ Plans:
 3. No CVE scenario kill-chain references Metasploit or automated exploit framework steps at any stage
 4. All 7 kill-chains conform to the stage format and TTP citation style defined in Phase 2
 
-**Plans:** 2/4 plans executed
+**Plans:** 3/4 plans executed
 
 Plans:
 **Wave 1**
@@ -79,7 +79,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 03-03-PLAN.md — CVE-03 Struts S2-045 + CVE-04 PrintNightmare kill-chains
+- [x] 03-03-PLAN.md — CVE-03 Struts S2-045 + CVE-04 PrintNightmare kill-chains
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
@@ -108,5 +108,5 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Scenario Proposals Document | 1/1 | Complete   | 2026-06-11 |
 | 2. Kill-Chain Methodology + AD/Network | 1/1 | Complete   | 2026-06-12 |
-| 3. CVE + Cloud/Container Kill-Chains | 2/4 | In Progress|  |
+| 3. CVE + Cloud/Container Kill-Chains | 3/4 | In Progress|  |
 | 4. LLM + ATP Chain Kill-Chains + Final Review | 0/1 | Not started | - |
