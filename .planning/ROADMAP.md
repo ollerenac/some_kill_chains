@@ -8,7 +8,7 @@
 
 - [x] **Phase 1: Scenario Proposals Document** — Produce the complete catalog of 23 scenario titles and descriptions, organized by domain (completed 2026-06-11)
 - [x] **Phase 2: Kill-Chain Methodology + AD/Network Scenarios** — Align on kill-chain methodology, then author detailed kill-chains for AD and Network scenarios (completed 2026-06-12)
-- [ ] **Phase 3: CVE + Cloud/Container Kill-Chains** — Author detailed kill-chains for CVE weaponization and Cloud/Container scenarios
+- [x] **Phase 3: CVE + Cloud/Container Kill-Chains** — Author detailed kill-chains for CVE weaponization and Cloud/Container scenarios (completed 2026-06-12)
 - [ ] **Phase 4: LLM + ATP Chain Kill-Chains + Final Review** — Author kill-chains for LLM and ATP scenarios, then final consistency review across all 23
 
 ---
@@ -66,7 +66,7 @@ Plans:
 3. No CVE scenario kill-chain references Metasploit or automated exploit framework steps at any stage
 4. All 7 kill-chains conform to the stage format and TTP citation style defined in Phase 2
 
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 
 Plans:
 **Wave 1**
@@ -83,7 +83,7 @@ Plans:
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
-- [ ] 03-04-PLAN.md — CC-01 IMDS SSRF + CC-02 Docker cgroup escape + CC-03 K8s hostPath + consistency table
+- [x] 03-04-PLAN.md — CC-01 IMDS SSRF + CC-02 Docker cgroup escape + CC-03 K8s hostPath + consistency table
 
 ### Phase 4: LLM + ATP Chain Kill-Chains + Final Review
 
@@ -108,5 +108,5 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Scenario Proposals Document | 1/1 | Complete   | 2026-06-11 |
 | 2. Kill-Chain Methodology + AD/Network | 1/1 | Complete   | 2026-06-12 |
-| 3. CVE + Cloud/Container Kill-Chains | 3/4 | In Progress|  |
+| 3. CVE + Cloud/Container Kill-Chains | 4/4 | Complete   | 2026-06-12 |
 | 4. LLM + ATP Chain Kill-Chains + Final Review | 0/1 | Not started | - |
