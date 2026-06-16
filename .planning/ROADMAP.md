@@ -106,7 +106,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 04-02-PLAN.md — LLM-03 (IDOR in chat history API) kill-chain
+- [x] 04-02-PLAN.md — LLM-03 (IDOR in chat history API) kill-chain
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
