@@ -114,7 +114,7 @@ Plans:
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
-- [ ] 04-04-PLAN.md — ATP-03 (LAPSUS$-style cloud identity chain) + ATP-04 (Volt Typhoon-style IPv6 relay chain) kill-chains + Consistency Verification table extension (7 new rows)
+- [x] 04-04-PLAN.md — ATP-03 (LAPSUS$-style cloud identity chain) + ATP-04 (Volt Typhoon-style IPv6 relay chain) kill-chains + Consistency Verification table extension (7 new rows)
 
 **Wave 5** *(blocked on Wave 4 completion)*
 
