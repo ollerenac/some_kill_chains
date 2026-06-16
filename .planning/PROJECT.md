@@ -24,6 +24,8 @@ Students must deeply understand each attack technique by building and executing 
 - [x] Phase 1 deliverable: concise document with scenario titles and descriptions only — `docs/SCENARIOS.md` complete (2026-06-12)
 - [x] Phase 2 deliverable: full kill-chain stages per scenario with MITRE ATT&CK TTP codes — `docs/KILL-CHAINS.md` complete (2026-06-12)
 - [x] Kill-chain methodology agreed before Phase 2 implementation begins — methodology preamble in KILL-CHAINS.md
+- [x] Phase 3 deliverable: CVE weaponization + Cloud/Container kill-chains (CVE-01..04, CC-01..03) — 7 kill-chains appended to `docs/KILL-CHAINS.md`, flag count 17/17 (2026-06-12)
+- [x] CVE-based scenarios require students to author exploit code — validated: each CVE kill-chain specifies pre-staged scaffold vs student-authored code boundary (D-01..D-04); CVE-03 full student authorship (no scaffold)
 
 ### Out of Scope
 
