@@ -47,7 +47,7 @@
 
 - [ ] **CVE-02** *(Medium, Standalone, 2 VMs)*: Log4Shell (CVE-2021-44228). Student authors a JNDI injection payload string and a Python-based LDAP/HTTP exploit chain server to deliver and execute a command injection against an Apache Log4j 2.x Java application, resulting in OS command execution and flag retrieval.
 
-- [ ] **CVE-03** *(Medium, Standalone, 2 VMs)*: Spring4Shell (CVE-2022-22965). Student crafts an HTTP exploit for the Spring MVC ClassLoader deserialization vulnerability — authors a Python script that sends the crafted multi-part request to deploy a JSP webshell, then uses the webshell to retrieve the flag.
+- [ ] **CVE-03** *(Medium, Standalone, 2 VMs)*: Apache Struts S2-045 (CVE-2017-5638). Student authors a Python exploit script (~15–25 lines) that sends a single malicious HTTP POST request with a crafted Content-Type header containing an OGNL expression, achieving OS command execution on the Struts2 application server and retrieving the flag.
 
 - [ ] **CVE-04** *(Medium, Standalone, 2 VMs)*: PrintNightmare LPE (CVE-2021-34527). Student implements the DLL injection technique for the Windows Print Spooler — authors a C/Python payload that exploits `AddPrinterDriverEx` to load a malicious DLL with SYSTEM privileges, escalating from a low-privileged user to retrieve the flag.
 

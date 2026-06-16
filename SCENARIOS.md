@@ -109,12 +109,12 @@ You identify a Java application that logs attacker-controlled input using a vuln
 
 ---
 
-### CVE-03: Spring4Shell — CVE-2022-22965
+### CVE-03: Apache Struts S2-045 — CVE-2017-5638 (Equifax Breach Vector)
 
 **Difficulty:** Medium
 **VMs:** 2
 
-You discover a Java web application built on Spring MVC, deployed as a WAR on a servlet container, and running on Java 9 or later — the prerequisite conditions for CVE-2022-22965. You write the exploit: an HTTP request that abuses the Spring data-binding mechanism to traverse the ClassLoader property chain via the AccessLogValve, manipulating the logging configuration to write a JSP webshell file to the application's deployment directory. Once the webshell is planted, you use it to execute commands and retrieve the flag embedded on the target server.
+You face an Apache Struts 2 web application running in a Docker container on the target server. The application processes multipart file upload requests using Jakarta's vulnerable multipart parser — the same misconfiguration that enabled the 2017 Equifax breach. You author a Python exploit script that injects an OGNL expression into the Content-Type header of an HTTP POST request, bypassing Struts2's security restrictions and executing arbitrary OS commands on the server. No JSP webshell is needed — the exploit returns command output directly in the HTTP response. You use this remote command execution to retrieve the flag from the target server.
 
 ---
 
