@@ -3354,7 +3354,7 @@ dir C:\ /s /b | findstr "flag2.txt"
 
 ---
 
-### ATP-02: SolarWinds-Style Supply Chain Compromise + DNS C2
+### ATP-02: SolarWinds-Style Supply Chain Compromise via DNS C2
 
 **VMs:** Attacker (Kali), Update Server (Ubuntu 22.04, nginx serving update packages), Target (Ubuntu 22.04, cron job polling update server)
 **Difficulty:** Hard

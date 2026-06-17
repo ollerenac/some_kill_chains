@@ -3113,7 +3113,7 @@ dir C:\ /s /b | findstr "flag2.txt"
 
 ---
 
-### ATP-02: Compromiso de Cadena de Suministro al Estilo SolarWinds + C2 DNS
+### ATP-02: Compromiso de Cadena de Suministro al Estilo SolarWinds via C2 DNS
 
 **VMs:** Attacker (Kali), Update Server (Ubuntu 22.04, nginx serving update packages), Target (Ubuntu 22.04, cron job polling update server)
 **Dificultad:** Difícil

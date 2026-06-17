@@ -443,7 +443,7 @@ You begin with knowledge of an internet-facing web application that processes us
 
 You are handed access to a simulated software update distribution server — the upstream source that downstream targets trust implicitly. You modify an update package to include a backdoor that executes silently when the downstream target applies the update, and once the backdoored update runs on the downstream host you complete your first objective on the compromised target. With your foothold established, you shift to the second objective: a further-isolated target that is not directly reachable from your position. You establish a covert command-and-control channel by tunneling communications through DNS using dnscat2, bypassing the network segmentation, and completing your second objective on the isolated host.
 
-[→ Kill-Chain](docs/KILL-CHAINS.md#atp-02-solarwinds-style-supply-chain-compromise-dns-c2)
+[→ Kill-Chain](docs/KILL-CHAINS.md#atp-02-solarwinds-style-supply-chain-compromise-via-dns-c2)
 
 ### Referencias
 
