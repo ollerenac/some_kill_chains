@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "timestamp": "2026-06-16T19:57:27.057Z",
+  "timestamp": "2026-06-17T23:56:00Z",
   "phase": null,
   "phase_name": "post-v1.0 ad-hoc",
   "phase_dir": null,
@@ -9,47 +9,45 @@
   "total_tasks": null,
   "status": "paused",
   "completed_tasks": [
-    {"id": 1, "name": "PDF generator (scripts/generate_pdf_es.py)", "status": "done", "commit": "ac57ec1", "note": "file still untracked — needs commit"},
+    {"id": 1, "name": "PDF generator ES (scripts/generate_pdf_es.py)", "status": "done", "commit": "429d45e"},
     {"id": 2, "name": "CTF-course mapping (docs/CTF-CURSOS.md)", "status": "done", "commit": "15a5b7e"},
     {"id": 3, "name": "Git author rebase (blinkomaniak → ollerenac)", "status": "done", "commit": "force-pushed by user between sessions"},
     {"id": 4, "name": "Untrack PDFs + recreate .gitignore (*.pdf rule)", "status": "done", "commit": "1d687f1"},
     {"id": 5, "name": "Professor invitation email (docs/CORREO-INVITACION-PROFESORES.md)", "status": "done", "commit": "9da138e"},
-    {"id": 6, "name": "Professor identification (docs/PROFESORES-CONTACTO.md)", "status": "done", "commit": "8c10eb8"}
+    {"id": 6, "name": "Professor identification (docs/PROFESORES-CONTACTO.md)", "status": "done", "commit": "8c10eb8"},
+    {"id": 7, "name": "Fix broken kill-chain links on GitHub Pages (quick 260617-fwl)", "status": "done", "commit": "32560d4"},
+    {"id": 8, "name": "Fix ATP-02 anchor broken by + in heading (gsd-fast)", "status": "done", "commit": "77a2a30"},
+    {"id": 9, "name": "PDF generator EN (scripts/generate_pdf_en.py) → propuesta_escenarios.pdf", "status": "done", "commit": "429d45e"}
   ],
   "remaining_tasks": [
-    {"id": 7, "name": "Commit scripts/generate_pdf_es.py (untracked PDF generator)", "status": "not_started"},
-    {"id": 8, "name": "Push commits 9da138e, 2e85276, 8c10eb8 to origin/main", "status": "not_started"},
-    {"id": 9, "name": "Decide fate of untracked local files (BRIEF.md, *.csv, *.xlsx, *.jpeg, docs/contenidos_adicionales_inictel/, docs/images/)", "status": "not_started"},
-    {"id": 10, "name": "Identify CBH03 + CBN21 professors (Auditoría, Forense — absent from 2026-1)", "status": "blocked"}
+    {"id": 10, "name": "Decide fate of untracked local files (.claude/, BRIEF.md, docs/contenidos_adicionales_inictel/, docs/curricula/, docs/images/, .planning/README.md, .planning/phases/04-.../04-VERIFICATION.md)", "status": "not_started"},
+    {"id": 11, "name": "Fill email placeholders in docs/CORREO-INVITACION-PROFESORES.md and send outreach", "status": "not_started"},
+    {"id": 12, "name": "Identify CBH03 + CBN21 professors (Auditoría, Forense — absent from 2026-1)", "status": "blocked"}
   ],
   "blockers": [
     {"description": "CBH03 (Auditoría de Ciberseguridad) and CBN21 (Informática Forense) not in 2026-1 schedule — professors unknown", "type": "external", "workaround": "Check 2026-2 schedule or ask faculty coordinator directly"}
   ],
   "human_actions_pending": [
-    {"action": "git push origin main — push commits 9da138e, 2e85276, 8c10eb8 to remote", "context": "Force-push in previous session only covered up to 1d687f1; newer commits may not be on remote yet", "blocking": false},
     {"action": "Complete placeholders in docs/CORREO-INVITACION-PROFESORES.md before sending (deadline date, director name, institution, contact info)", "context": "Email template ready at docs/CORREO-INVITACION-PROFESORES.md — [COMPLETAR] marks all remaining placeholders", "blocking": false}
   ],
   "decisions": [
-    {"decision": "PDF generation: reportlab (Option A)", "rationale": "Already installed, no new deps, supports UTF-8 via NotoSans TTF", "phase": "post-v1.0"},
-    {"decision": "PDF scope: Spanish only, public version (no flag hints)", "rationale": "User explicitly chose ES only; SCENARIOS_ES_INTERNAL.md is gitignored for instructor copy", "phase": "post-v1.0"},
+    {"decision": "PDF generation: reportlab with NotoSans TTF", "rationale": "Already installed, no new deps, supports UTF-8 and Spanish/English characters", "phase": "post-v1.0"},
+    {"decision": "Dual-language PDFs: separate _en.py and _es.py scripts (not parameterized)", "rationale": "Each script is fully self-contained and runnable without arguments; duplication is modest for infrequent generation", "phase": "post-v1.0"},
+    {"decision": "English PDF reference table content: left in Spanish", "rationale": "SCENARIOS.md reference tables were appended in Spanish (quick task 260613-4cx) and never translated; only column headers (Resource/URL/Purpose) are English in the output", "phase": "post-v1.0"},
     {"decision": "CTF-course affinity: central technique, not general domain", "rationale": "More precise professor matching — e.g. CC-01 (SSRF in IMDS) maps to CBN05 (Pentesting Web), not a cloud course", "phase": "post-v1.0"},
     {"decision": "Email greeting: generic 'Estimado/a Profesor/a' (no name placeholder)", "rationale": "User asked for a single template without a name slot", "phase": "post-v1.0"},
     {"decision": "4 courses with no CTF fit: CBS02, CBS04, CBS08, BMA20", "rationale": "DB and early OS courses have no direct CTF technique alignment in the 23-scenario catalog", "phase": "post-v1.0"}
   ],
   "uncommitted_files": [
-    "scripts/generate_pdf_es.py (untracked — should commit)",
-    ".planning/config.json (modified)",
-    ".claude/ (new directory)",
+    ".planning/config.json (modified — not committed by design)",
+    ".claude/ (new directory — Claude Code config, deliberately untracked)",
     ".planning/README.md (untracked)",
     ".planning/phases/04-llm-atp-chain-kill-chains-final-review/04-VERIFICATION.md (untracked)",
     "BRIEF.md (untracked)",
-    "curso-profesor-L4.csv (untracked)",
-    "cursos_que_pueden_tener_interes_en_cont_adicionales.txt (untracked)",
     "docs/contenidos_adicionales_inictel/ (untracked)",
-    "docs/images/ (untracked)",
-    "horario2026.xlsx (untracked)",
-    "profesores-email.jpeg (untracked)"
+    "docs/curricula/ (untracked — new directory appeared this session)",
+    "docs/images/ (untracked)"
   ],
-  "next_action": "Commit scripts/generate_pdf_es.py, then push commits 9da138e + 2e85276 + 8c10eb8 to origin/main",
-  "context_notes": "Project v1.0 complete. All recent work is professor-outreach tooling: PDF of catalog (ES), CTF-course mapping, invitation email, professor contact priority list. 19 unique professors identified across 21 courses. Next likely request: follow up on email outreach, or produce EN version of PDF."
+  "next_action": "If continuing professor outreach: fill [COMPLETAR] placeholders in docs/CORREO-INVITACION-PROFESORES.md. If continuing content work: decide fate of untracked files or run /gsd-quick to start a new task.",
+  "context_notes": "Project v1.0 complete. Remote (origin/main) is at 429d45e — fully in sync. Both PDF generators committed: generate_pdf_es.py (Spanish, 14pp) and generate_pdf_en.py (English, 15pp). PDFs are gitignored (*.pdf). Professor outreach toolkit is complete (email template + contact priority list for 19 professors across 21 courses). The only open action item requiring human decision is filling the email placeholders before sending. CBH03/CBN21 professors remain unknown (not in 2026-1 schedule)."
 }
