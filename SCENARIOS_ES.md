@@ -464,7 +464,7 @@ Comienzas con el conocimiento de una aplicación web de cara a internet que proc
 Se te entrega acceso a un servidor de distribución de actualizaciones de software simulado — la fuente upstream en la que los objetivos downstream confían implícitamente. Modificas un paquete de actualización para incluir un backdoor que se ejecuta silenciosamente cuando el objetivo downstream aplica la actualización, y una vez que la actualización con backdoor se ejecuta en el host downstream completas tu primer objetivo en el host comprometido. Con tu punto de apoyo establecido, cambias al segundo objetivo: un objetivo adicional más aislado al que no es posible llegar directamente desde tu posición. Estableces un canal de comando y control encubierto tunelizando las comunicaciones a través de DNS usando dnscat2, eludiendo la segmentación de red, y completas tu segundo objetivo en el host aislado.
 
 
-[→ Kill-Chain](docs/KILL-CHAINS_ES.md#atp-02-compromiso-de-cadena-de-suministro-al-estilo-solarwinds-c2-dns)
+[→ Kill-Chain](docs/KILL-CHAINS_ES.md#atp-02-compromiso-de-cadena-de-suministro-al-estilo-solarwinds-via-c2-dns)
 
 ### Referencias
 
