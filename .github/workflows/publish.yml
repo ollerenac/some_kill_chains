@@ -21,12 +21,12 @@ jobs:
 
       - name: Prepare publish artifacts
         run: |
-          mkdir -p _site
+          mkdir -p _site/docs
           cp SCENARIOS.md _site/
           cp SCENARIOS_ES.md _site/
-          cp docs/KILL-CHAINS.md _site/
-          [ -f docs/KILL-CHAINS_ES.md ] && cp docs/KILL-CHAINS_ES.md _site/ || true
-          # Simple index linking all four files
+          cp docs/KILL-CHAINS.md _site/docs/
+          [ -f docs/KILL-CHAINS_ES.md ] && cp docs/KILL-CHAINS_ES.md _site/docs/ || true
+          # Index links mirror repo-relative paths so SCENARIOS.md kill-chain anchors resolve
           cat > _site/index.md <<'EOF'
           # CTF Scenario Catalog — Advanced Cybersecurity Lab
 
@@ -34,8 +34,8 @@ jobs:
           |----------|----------|
           | [Scenario Proposals](SCENARIOS.md) | English |
           | [Propuestas de Escenarios](SCENARIOS_ES.md) | Español |
-          | [Kill-Chain Catalog](KILL-CHAINS.md) | English |
-          | [Catálogo de Kill-Chains](KILL-CHAINS_ES.md) | Español |
+          | [Kill-Chain Catalog](docs/KILL-CHAINS.md) | English |
+          | [Catálogo de Kill-Chains](docs/KILL-CHAINS_ES.md) | Español |
           EOF
 
       - name: Deploy to GitHub Pages
