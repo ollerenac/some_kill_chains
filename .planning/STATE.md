@@ -66,6 +66,7 @@ See: .planning/PROJECT.md (updated 2026-06-11)
 | 260616-f8l | redactar-correo-invitacion-profesores | 2026-06-16 | `docs/CORREO-INVITACION-PROFESORES.md` created — email template por encargo del Director de Escuela invitando a profesores a revisar el catálogo CTF y enviar apreciaciones, observaciones, correcciones y sugerencias. |
 | 260616-q7p | identificar-profesores-por-curso | 2026-06-16 | `docs/PROFESORES-CONTACTO.md` created — cruce de horario 2026-1 con 23 cursos de interés; 19 profesores únicos identificados con tabla de prioridad de contacto. CBH03 y CBN21 no están en horario 2026-1. |
 | 260617-fwl | fix-broken-links-in-index-md-and-scenari | 2026-06-17 | Fixed broken kill-chain links on GitHub Pages. Workflow was flattening `docs/` into site root; fix copies kill-chains to `_site/docs/` and updates inline index.md links. All 40 kill-chain anchors now resolve correctly. Commit: 32560d4 |
+| 260617-pde | generar-pdf-en-ingles-del-catalogo-ctf | 2026-06-17 | `scripts/generate_pdf_en.py` created — English PDF generator producing `propuesta_escenarios.pdf` (15 pages) from `SCENARIOS.md`. Mirrors `generate_pdf_es.py` with English strings, badge labels (Easy/Medium/Hard), and domain map. Also committed previously-untracked `scripts/generate_pdf_es.py`. |
 
 ## Performance Metrics
 
